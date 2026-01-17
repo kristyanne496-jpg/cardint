@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio Inteligente v8</title>
+    <title>Cardápio Inteligente v9</title>
     <style>
         :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; --accent: #ff9800; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
@@ -32,7 +32,7 @@
         <div class="tab" onclick="app.mudarAba('semana', this)">Tabela</div>
         <div class="tab" onclick="app.mudarAba('compras', this)">Compras</div>
     </div>
-    <div id="conteudo-principal">Atualizando base de arroz...</div>
+    <div id="conteudo-principal">Otimizando variedade semanal...</div>
 </div>
 
 <script>
@@ -56,24 +56,27 @@ const app = {
             arroz: ["Arroz Branco", "Arroz com Cenoura"],
             feijoes: ["Feijão carioca", "Feijão preto", "Feijão fradinho"],
             proteinas: ["Frango assado", "Carne moída", "Carne de panela", "Bife no molho", "Peixe frito", "Fígado acebolado", "Frango grelhado", "Frango cozido", "Almôndega"],
-            acompanhamentos: ["Macarrão e Puré de batata", "Batata cozida e Salada de alface", "Couve refogada e Farofa", "Salada de maionese", "Mandioca frita e Vinagrete", "Creme de milho"],
-            sucos: ["Suco de Maracujá", "Suco de Laranja", "Suco de Abacaxi", "Suco de Limão"],
+            acompa: ["Macarrão e Puré de batata", "Batata cozida e Salada", "Couve refogada e Farofa", "Salada de maionese", "Mandioca frita e Vinagrete", "Creme de milho"],
+            sucos: ["Maracujá", "Laranja", "Abacaxi", "Limão"],
             sobremesas: ["Gelatina", "Pudim", "Mousse de maracujá"]
         },
         jantar: [
-            { txt: "Arroz com ovo", cat: "solido" }, { txt: "Arroz com frango", cat: "solido" },
-            { txt: "Sopa", cat: "liquido" }, { txt: "Caldo de carne", cat: "liquido" },
-            { txt: "Caldo de frango", cat: "liquido" }, { txt: "Pizza", cat: "solido" },
-            { txt: "Hambúrguer", cat: "solido" }, { txt: "Arroz doce", cat: "liquido" },
-            { txt: "Tapioca", cat: "solido" }, { txt: "Cuscuz com ovo", cat: "solido" },
-            { txt: "Mingau de milho", cat: "liquido" }, { txt: "Macarrão com frango", cat: "solido" },
-            { txt: "Cachorro-quente", cat: "solido" }
+            { txt: "Arroz com ovo", cat: "sol" }, { txt: "Arroz com frango", cat: "sol" },
+            { txt: "Sopa", cat: "liq" }, { txt: "Caldo de carne", cat: "liq" },
+            { txt: "Caldo de frango", cat: "liq" }, { txt: "Pizza", cat: "sol" },
+            { txt: "Hambúrguer", cat: "sol" }, { txt: "Arroz doce", cat: "liq" },
+            { txt: "Tapioca", cat: "sol" }, { txt: "Cuscuz com ovo", cat: "sol" },
+            { txt: "Mingau de milho", cat: "liq" }, { txt: "Macarrão com frango", cat: "sol" },
+            { txt: "Cachorro-quente", cat: "sol" }
         ],
-        lanchesM: ["Banana","Maçã","Uva","Melancia", "Mamão", "Pera"],
-        lanchesT: ["Biscoito", "Iogurte", "Bolo caseiro", "Vitamina de frutas", "Pão de queijo"]
+        lanchesM: ["Banana","Maçã","Uva","Melancia", "Mamão", "Pera", "Morango", "Manga"],
+        lanchesT: ["Biscoito", "Iogurte", "Bolo", "Vitamina", "Pão de queijo", "Pipoca", "Fruta"]
     },
 
-    escolher(lista) { return lista[Math.floor(Math.random() * lista.length)]; },
+    escolherERemover(lista) {
+        const idx = Math.floor(Math.random() * lista.length);
+        return lista.splice(idx, 1)[0];
+    },
 
     gerarTudo() {
         let plano = [];
@@ -81,37 +84,38 @@ const app = {
         
         for (let s = 0; s < 12; s++) {
             let semana = {};
-            let ultJantar = "", ultLancheM = "", ultLancheT = "";
+            // Copia as listas para poder remover itens sem alterar o banco original
+            let dispCafe = [...this.banco.cafe];
+            let dispLM = [...this.banco.lanchesM];
+            let dispLT = [...this.banco.lanchesT];
+            let dispJan = [...this.banco.jantar];
 
             dias.forEach(d => {
                 const isFimDeSemana = (d === "SÁBADO" || d === "DOMINGO");
 
-                // CAFÉ
-                const itemCafe = this.escolher(this.banco.cafe);
-                const bebCafe = itemCafe.cat === "liquido" ? "" : `• ${this.escolher(["Café", "Leite", "Chá", "Suco"])}`;
-                
-                // LANCHES (Sem repetição)
-                let lM; do { lM = this.escolher(this.banco.lanchesM); } while (lM === ultLancheM); ultLancheM = lM;
-                let lT; do { lT = this.escolher(this.banco.lanchesT); } while (lT === ultLancheT); ultLancheT = lT;
+                // Escolhas da semana (Sem repetir o item na mesma semana)
+                const itemCafe = this.escolherERemover(dispCafe);
+                const lM = this.escolherERemover(dispLM);
+                const lT = this.escolherERemover(dispLT);
+                const itemJan = this.escolherERemover(dispJan);
 
-                // ALMOÇO (Arroz Fixo + Regra Fígado)
-                const baseArroz = this.escolher(this.banco.almoco.arroz);
-                const feijao = this.escolher(this.banco.almoco.feijoes);
-                let prot; do { prot = this.escolher(this.banco.almoco.proteinas); } while (isFimDeSemana && prot.includes("Fígado"));
-                const acompanhamento = this.escolher(this.banco.almoco.acompanhamentos);
-                const sob = (d === "DOMINGO") ? `<span class='sobremesa'>🍮 ${this.escolher(this.banco.almoco.sobremesas)}</span>` : "";
+                // Almoço (Pode repetir pois são poucos feijões/arroz, mas segue regras)
+                const baseArroz = this.banco.almoco.arroz[Math.floor(Math.random() * 2)];
+                const feijao = this.banco.almoco.feijoes[Math.floor(Math.random() * 3)];
+                let prot; 
+                do { prot = this.banco.almoco.proteinas[Math.floor(Math.random() * this.banco.almoco.proteinas.length)]; 
+                } while (isFimDeSemana && prot.includes("Fígado"));
 
-                // JANTAR (Sem repetição)
-                let itemJan; do { itemJan = this.escolher(this.banco.jantar); } while (itemJan.txt === ultJantar); ultJantar = itemJan.txt;
-                const bebJan = itemJan.cat === "liquido" ? "" : `• 🥤 ${this.escolher(this.banco.almoco.sucos)}`;
+                const bebCafe = itemCafe.cat === "liquido" ? "" : `• ${this.banco.almoco.sucos[Math.floor(Math.random() * 4)]}`;
+                const bebJan = itemJan.cat === "liq" ? "" : `• 🥤 Suco de ${this.banco.almoco.sucos[Math.floor(Math.random() * 4)]}`;
 
                 semana[d] = {
                     cafe: { txt: `${itemCafe.txt}<br>${bebCafe}`, obs: itemCafe.txt.match(/Tapioca|Mingau|Arroz doce/i) ? "<span class='opcional'>Opção 2: Pão com Café</span>" : "" },
                     lancheM: lM,
                     almoco: { 
-                        txt: `• ${baseArroz}<br>• ${feijao}<br>• ${prot}<br>• ${acompanhamento}<br>• 🥤 ${this.escolher(this.banco.almoco.sucos)}`, 
+                        txt: `• ${baseArroz}<br>• ${feijao}<br>• ${prot}<br>• ${this.banco.almoco.acompa[Math.floor(Math.random() * 6)]}<br>• 🥤 Suco de ${this.banco.almoco.sucos[Math.floor(Math.random() * 4)]}`, 
                         obs: prot.includes("Fígado") ? "<span class='opcional'>Opção 2: Frango Grelhado</span>" : "",
-                        sobremesa: sob 
+                        sobremesa: (d === "DOMINGO") ? `<span class='sobremesa'>🍮 ${this.banco.almoco.sobremesas[Math.floor(Math.random()*3)]}</span>` : "" 
                     },
                     lancheT: lT,
                     jantar: { 
@@ -123,12 +127,12 @@ const app = {
             plano.push(semana);
         }
         localStorage.setItem("plano", JSON.stringify(plano));
-        localStorage.setItem("v", "8.0");
+        localStorage.setItem("v", "9.0");
         return plano;
     },
 
     obterDados() {
-        if (localStorage.getItem("v") !== "8.0") this.gerarTudo();
+        if (localStorage.getItem("v") !== "9.0") this.gerarTudo();
         let plano = JSON.parse(localStorage.getItem("plano"));
         const hoje = new Date();
         let diaIdx = hoje.getDay() === 0 ? 6 : hoje.getDay() - 1;
@@ -166,7 +170,7 @@ const app = {
             });
             container.innerHTML = html + `</table></div>`;
         } else {
-            container.innerHTML = `<h2>Compras</h2><p>Verifique os itens frescos na tabela semanal.</p>`;
+            container.innerHTML = `<h2>Compras</h2><p>Com a nova regra de não repetição, sua lista de compras terá mais itens variados por semana.</p>`;
         }
     },
     concluir() { alert("✅ Dia concluído!"); }
