@@ -10,6 +10,33 @@
         :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: var(--text); }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .shopping-list { list-style: none; padding: 0; }
+.shopping-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f9f9f9;
+    margin-bottom: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+.shopping-item.checked {
+    background: #e8f5e9;
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+.shopping-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+.btn-limpar {
+    background: #f44336;
+    font-size: 12px;
+    padding: 8px;
+    margin-bottom: 15px;
+}
         .semana-dia-box {
     border: 1px solid #ddd;
     border-radius: 10px;
@@ -264,25 +291,59 @@ const app = {
     },
 
 
-    renderCompras(el) {
-        const plano = JSON.parse(localStorage.getItem("plano"));
-        const semIdx = Math.floor(parseInt(localStorage.getItem("diaAtual")) / 7);
-        const semana = Object.values(plano[semIdx]);
-        const itens = new Set();
+        renderCompras(el) {
+        const { semana } = this.obterDados();
+        const itensSet = new Set();
         
-        semana.forEach(d => {
-            itens.add(d.cafe.base); itens.add(d.cafe.acompanhamento);
-            itens.add(d.almoco.feijao); itens.add(d.almoco.proteina);
-            itens.add(d.lancheManha);
+        // Coleta todos os itens base da semana
+        Object.values(semana).forEach(d => {
+            // Extrai as palavras principais para a lista
+            const extrator = (str) => str.split('<br>')[0].split(' com ')[0].replace('• ', '');
+            itensSet.add(extrator(d.cafe));
+            itensSet.add(d.lancheM);
+            itensSet.add("Arroz branco");
+            itensSet.add(extrator(d.almoco.split('<br>• ')[1])); // Feijão
+            itensSet.add(extrator(d.almoco.split('<br>• ')[2])); // Proteína
         });
 
-        let html = "<h2>Lista de Compras</h2><ul class='shopping-list'>";
-        Array.from(itens).sort().forEach(it => {
-            html += `<li><input type="checkbox"> ${it}</li>`;
+        const estoque = JSON.parse(localStorage.getItem("estoque") || "[]");
+        
+        let html = `<h2>🛒 Estoque e Compras</h2>
+                    <p style="font-size:0.8em; color:#666">Marque o que você já tem em casa:</p>
+                    <button class="btn-limpar" onclick="app.limparEstoque()">Limpar Seleção</button>
+                    <ul class="shopping-list">`;
+
+        Array.from(itensSet).sort().forEach(item => {
+            const isChecked = estoque.includes(item) ? "checked" : "";
+            const isCheckedAttr = estoque.includes(item) ? "checked" : "";
+            
+            html += `
+                <li class="shopping-item ${isChecked}">
+                    <span>${item}</span>
+                    <input type="checkbox" ${isCheckedAttr} onchange="app.toggleEstoque('${item}')">
+                </li>`;
         });
-        html += "</ul>";
-        el.innerHTML = html;
+
+        el.innerHTML = html + `</ul>`;
     },
+
+    toggleEstoque(item) {
+        let estoque = JSON.parse(localStorage.getItem("estoque") || "[]");
+        if (estoque.includes(item)) {
+            estoque = estoque.filter(i => i !== item);
+        } else {
+            estoque.push(item);
+        }
+        localStorage.setItem("estoque", JSON.stringify(estoque));
+        this.mudarAba('compras'); // Recarrega a tela para aplicar o estilo visual
+    },
+
+    limparEstoque() {
+        if(confirm("Deseja desmarcar todos os itens?")) {
+            localStorage.setItem("estoque", "[]");
+            this.mudarAba('compras');
+        }
+    }
 
     concluirDiaManual() {
         if(confirm("Deseja avançar para o cardápio de amanhã?")) {
