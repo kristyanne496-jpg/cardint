@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio Inteligente v17.1</title>
+    <title>Cardápio Inteligente v18 - Checklist</title>
     <style>
         :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
@@ -20,7 +20,9 @@
         th { background: var(--primary); color: white; padding: 10px; font-size: 11px; }
         td { padding: 10px; border: 1px solid #eee; font-size: 11px; background: white; vertical-align: top; }
         .hoje-col { background: #e8f5e9 !important; font-weight: bold; border: 2px solid var(--primary) !important; }
-        .opcao2 { background: #fff3e0; padding: 8px; border-radius: 5px; border: 1px dashed #ff9800; margin-top: 8px; font-size: 0.9em; color: #e65100; }
+        .checklist-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .checklist-item input { width: 18px; height: 18px; cursor: pointer; }
+        .checked { text-decoration: line-through; color: #aaa; }
     </style>
 </head>
 <body>
@@ -32,7 +34,7 @@
         <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
         <button class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
     </div>
-    <div id="conteudo-principal">Sincronizando...</div>
+    <div id="conteudo-principal">Carregando v18...</div>
 </div>
 
 <script>
@@ -49,13 +51,14 @@ const app = {
             arroz: ["Arroz Branco", "Arroz com Cenoura"],
             feijoes: ["Carioca", "Preto", "Fradinho"],
             prot: ["Frango assado", "Carne moída", "Bife", "Peixe", "Almôndegas"],
-            acompa: ["Puré", "Salada", "Couve", "Farofa"]
+            acompa: ["Puré de batata", "Salada", "Couve refogada", "Farofa", "Creme de milho"]
         },
         jantar: [
             { t: "Sopa de legumes", c: "liq", i: "Macarrão, Legumes" },
             { t: "Arroz com ovo", c: "sol", i: "Arroz, Ovos" },
             { t: "Tapioca recheada", c: "sol", i: "Goma, Queijo" }
         ],
+        bebidas: ["Café", "Leite", "Suco de Laranja", "Chá"],
         lanchesM: ["Banana", "Maçã", "Uva", "Pera", "Melancia"],
         lanchesT: ["Iogurte", "Bolo", "Pão de Queijo", "Pipoca", "Sanduíche"]
     },
@@ -89,6 +92,7 @@ const app = {
         let dLM = this.shuffle(this.base.lanchesM);
         let dLT = this.shuffle(this.base.lanchesT);
         let dProt = this.shuffle(this.base.almoco.prot);
+        let dAcom = this.shuffle(this.base.almoco.acompa);
         let dJan = this.shuffle(this.base.jantar);
         
         const f1 = this.base.almoco.feijoes[Math.floor(Math.random()*3)];
@@ -97,22 +101,25 @@ const app = {
         dias.forEach((d, index) => {
             const itemC = dCafe[index % dCafe.length];
             const itemP = dProt[index % dProt.length];
+            const itemA = dAcom[index % dAcom.length];
             const itemJ = dJan[index % dJan.length];
+            const beb = this.base.bebidas[index % 4];
             const feijao = (index < 4) ? f1 : f2;
 
             plano[d] = {
                 cafe_n: itemC.t,
-                cafe_v: `${itemC.t}${itemC.c === "liq" ? "" : "<br>• Café"}`,
+                cafe_v: `${itemC.t}${itemC.c === "liq" ? "" : "<br>• " + beb}`,
+                bebida: beb,
                 isLiq: itemC.c === "liq",
                 lancheM: dLM[index % dLM.length],
                 almoco_n: itemP,
-                almoco_v: `• Arroz<br>• Feijão ${feijao}<br>• ${itemP}<br>• Acompanhamento`,
+                almoco_v: `• ${this.base.almoco.arroz[index % 2]}<br>• Feijão ${feijao}<br>• ${itemP}<br>• ${itemA}`,
                 lancheT: dLT[index % dLT.length],
                 jantar_n: itemJ.t,
                 jantar_v: `${itemJ.t}${itemJ.c === "liq" ? "" : "<br>• Suco"}`
             };
         });
-        localStorage.setItem("plano_v17_1", JSON.stringify(plano));
+        localStorage.setItem("plano_v18", JSON.stringify(plano));
         return plano;
     },
 
@@ -123,14 +130,15 @@ const app = {
             btn.classList.add('active');
         }
 
-        let plano = JSON.parse(localStorage.getItem("plano_v17_1")) || this.gerarTudo();
+        let plano = JSON.parse(localStorage.getItem("plano_v18")) || this.gerarTudo();
         const diasNomes = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         const hojeIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
-        const d = plano[diasNomes[hojeIdx]];
+        const diaNome = diasNomes[hojeIdx];
+        const d = plano[diaNome];
 
         if (aba === 'dia') {
             container.innerHTML = `
-                <div class="bloco"><h3>☕ Café</h3><p>${d.cafe_v}</p>${d.isLiq ? '<div class="opcao2">Opção 2: Pão com Café</div>' : ''}</div>
+                <div class="bloco"><h3>☕ Café</h3><p>${d.cafe_v}</p>${d.isLiq ? '<b>Opção 2: Pão com Café</b>' : ''}</div>
                 <div class="bloco"><h3>🍎 Lanche M</h3><p>${d.lancheM}</p></div>
                 <div class="bloco"><h3>🍛 Almoço</h3><p>${d.almoco_v}</p></div>
                 <div class="bloco"><h3>🍪 Lanche T</h3><p>${d.lancheT}</p></div>
@@ -148,24 +156,38 @@ const app = {
             });
             container.innerHTML = html + `</table></div>`;
         } else if (aba === 'receitas') {
-            const pratos = [
-                {tipo: "Café", nome: d.cafe_n},
-                {tipo: "Almoço", nome: d.almoco_n},
-                {tipo: "Jantar", nome: d.jantar_n}
-            ];
+            const pratos = [{t: "Café", n: d.cafe_n}, {t: "Almoço", n: d.almoco_n}, {t: "Jantar", n: d.jantar_n}];
             let html = `<h2>Ingredientes Permanentes</h2>`;
             pratos.forEach(p => {
-                const idMsg = "msg-" + p.nome.replace(/\s/g, '');
-                html += `
-                <div class="bloco">
-                    <h3>${p.tipo}: ${p.nome}</h3>
-                    <textarea class="edit-box" oninput="app.salvarIng('${p.nome}', this.value)">${this.getIng(p.nome, "Clique para editar os ingredientes...")}</textarea>
-                    <span class="save-msg" id="${idMsg}">✓ Salvo para sempre!</span>
-                </div>`;
+                html += `<div class="bloco"><h3>${p.t}: ${p.n}</h3>
+                <textarea class="edit-box" oninput="app.salvarIng('${p.n}', this.value)">${this.getIng(p.n, "Edite aqui os ingredientes...")}</textarea>
+                <span class="save-msg" id="msg-${p.n.replace(/\s/g, '')}">✓ Salvo para o futuro!</span></div>`;
             });
             container.innerHTML = html;
         } else if (aba === 'compras') {
-            container.innerHTML = `<h2>Lista de Compras</h2><div class="bloco">Visualize os ingredientes editados na aba anterior para organizar as compras.</div>`;
+            let itens = new Set();
+            diasNomes.forEach(dn => {
+                const dia = plano[dn];
+                // Puxa ingredientes salvos
+                this.getIng(dia.cafe_n, "").split(',').forEach(i => if(i.trim()) itens.add(i.trim()));
+                this.getIng(dia.almoco_n, "").split(',').forEach(i => if(i.trim()) itens.add(i.trim()));
+                this.getIng(dia.jantar_n, "").split(',').forEach(i => if(i.trim()) itens.add(i.trim()));
+                // Puxa Frutas e Bebidas
+                itens.add(dia.lancheM);
+                itens.add(dia.bebida);
+                itens.add("Arroz");
+                itens.add("Feijão");
+            });
+
+            let html = `<h2>Lista de Compras ( Checklist )</h2><div class="bloco">`;
+            Array.from(itens).sort().forEach((item, idx) => {
+                html += `
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-${idx}" onclick="this.nextSibling.classList.toggle('checked')">
+                    <label for="item-${idx}">${item}</label>
+                </div>`;
+            });
+            container.innerHTML = html + `</div><small>Marque o que já tem em estoque.</small>`;
         }
     }
 };
