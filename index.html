@@ -22,6 +22,7 @@ button { width:100%; padding:12px; background:var(--primary); color:#fff; border
     <div class="nav-tabs">
         <div class="tab active" onclick="app.mudarAba('dia',this)">Hoje</div>
         <div class="tab" onclick="app.mudarAba('semana',this)">Semana</div>
+        <div class="tab" onclick="app.mudarAba('compras',this)">Compras</div>
     </div>
     <div id="conteudo"></div>
 </div>
@@ -135,11 +136,16 @@ const app = {
     },
 
     mudarAba(aba, el) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
-        const c = document.getElementById("conteudo");
-        aba === "dia" ? this.renderDia(c) : this.renderSemana(c);
-    },
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+
+    const c = document.getElementById("conteudo");
+
+    if (aba === "dia") this.renderDia(c);
+    else if (aba === "semana") this.renderSemana(c);
+    else this.renderCompras(c);
+},
+
 
     renderDia(el) {
         const semana = this.obterSemana();
@@ -176,6 +182,86 @@ const app = {
         el.innerHTML = html;
     }
 };
+gerarListaCompras() {
+    const semana = this.obterSemana();
+    const itens = new Set();
+
+    Object.values(semana).forEach(dia => {
+
+        // Café
+        itens.add(dia.cafe.base);
+        itens.add(dia.cafe.acomp);
+        itens.add(dia.cafe.bebida);
+
+        // Lanches
+        itens.add(dia.lancheManha);
+        itens.add(dia.lancheTarde);
+
+        // Almoço
+        itens.add(dia.almoco.feijao);
+        itens.add(dia.almoco.proteina);
+        itens.add(dia.almoco.acomp);
+
+        // Jantar
+        itens.add(dia.jantar);
+    });
+
+    return Array.from(itens).sort();
+},
+renderCompras(el) {
+    const lista = this.gerarListaCompras();
+    const estoque = JSON.parse(localStorage.getItem("estoque") || "[]");
+
+    let html = `<h2>🛒 Lista de Compras</h2>
+        <p style="font-size:0.85em;color:#666">
+            Marque o que você já tem em casa
+        </p>
+        <button onclick="app.limparEstoque()" style="background:#f44336">
+            Limpar seleção
+        </button>
+        <ul style="list-style:none;padding:0">`;
+
+    lista.forEach(item => {
+        const marcado = estoque.includes(item);
+        html += `
+            <li style="
+                display:flex;
+                justify-content:space-between;
+                padding:10px;
+                margin-bottom:6px;
+                background:${marcado ? '#e8f5e9' : '#f9f9f9'};
+                border-radius:8px;
+            ">
+                <span style="${marcado ? 'text-decoration:line-through;opacity:.6' : ''}">
+                    ${item}
+                </span>
+                <input type="checkbox"
+                    ${marcado ? 'checked' : ''}
+                    onchange="app.toggleEstoque('${item}')">
+            </li>`;
+    });
+
+    el.innerHTML = html + "</ul>";
+},
+toggleEstoque(item) {
+    let estoque = JSON.parse(localStorage.getItem("estoque") || "[]");
+
+    if (estoque.includes(item)) {
+        estoque = estoque.filter(i => i !== item);
+    } else {
+        estoque.push(item);
+    }
+
+    localStorage.setItem("estoque", JSON.stringify(estoque));
+    this.renderCompras(document.getElementById("conteudo"));
+},
+
+limparEstoque() {
+    if (confirm("Deseja desmarcar todos os itens?")) {
+        localStorage.setItem("estoque", "[]");
+        this.renderCompras(document.getElementById("conteudo"));
+    }
+},
 
 app.mudarAba("dia", document.querySelector(".tab"));
 </script>
