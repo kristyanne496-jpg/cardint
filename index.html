@@ -149,6 +149,26 @@ sobremesas: ["Gelatina", "Sorvete", "Pudim", "Mousse de maracujá", "Mousse de l
         let protUltima = ""; let protCont = 0;
 
         diasNome.forEach((dia, index) => {
+            // Localize onde o 'semana[d]' é montado e use esta lógica:
+const baseCafe = this.escolher(this.banco.cafe);
+const isMingau = baseCafe.toLowerCase().includes("mingau");
+const prot = this.escolher(this.banco.proteina);
+
+semana[d] = {
+    cafe: {
+        txt: isMingau ? baseCafe : `${baseCafe} com ${this.escolher(this.banco.acompa)}<br>• ${this.escolher(this.banco.bebidaPadaria)}`,
+        obs: isMingau ? "<span class='opcional'>Opção 2: Pão com Café</span>" : ""
+    },
+    lancheM: this.escolher(this.banco.lanches),
+    almoco: {
+        txt: `Arroz e Feijão<br>• ${prot}<br>• ${this.escolher(this.banco.acompaAlmoco)}<br>• Suco de ${this.escolher(this.banco.sucos)}`,
+        obs: prot.includes("Fígado") ? "<span class='opcional'>Opção 2: Frango Grelhado</span>" : "",
+        sobremesa: (d === "SÁBADO" || d === "DOMINGO") ? `<span class='sobremesa'>🍮 ${this.escolher(this.banco.sobremesas)}</span>` : ""
+    },
+    lancheT: `${this.escolher(["Biscoito", "Bolo", "Torradas"])} com ${this.escolher(["Chá", "Leite com achocolatado"])}`,
+    jantar: `${this.escolher(this.banco.jantar)}<br>• Suco de ${this.escolher(this.banco.sucos)}`
+};
+    
             // Troca feijão a cada 4 dias
             if (index === 4) feijaoAtual = this.escolher(this.banco.almoco.feijoes);
 
