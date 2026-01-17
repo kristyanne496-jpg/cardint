@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cardapio-v28-gold';
+const CACHE_NAME = 'cardapio-v24-1-cache';
 self.addEventListener('install', e => {
   self.skipWaiting();
 });
