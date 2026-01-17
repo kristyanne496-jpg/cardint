@@ -160,9 +160,9 @@ const app = {
             nomes.forEach((n, i) => {
                 const dia = p[n];
                 h += `<tr class="${i===hojeIdx?'hoje-row':''}"><td><b>${n}</b></td>
-                    <td>${dia.cafe}<button class="btn-reroll" onclick="app.reroll('${n}','cafe')">🎲</button>${dia.isM?`<div class="segunda-opcao">${dia.s}</div>`:''}</td>
+                    <td>${dia.cafe}<button class="btn-reroll" onclick="app.reroll('${n}','cafe')">🎲</button>${dia.isM?`<div class="segunda-opcao">${dia.s}</div>`:''} ${dia.beb ? '<br>+ '+dia.beb : ''}</td>
                     <td>${dia.lM}<button class="btn-reroll" onclick="app.reroll('${n}','lancheM')">🎲</button></td>
-                    <td>${dia.pro} + ${dia.aco}<button class="btn-reroll" onclick="app.reroll('${n}','almoco')">🎲</button></td>
+                    <td>${dia.arr}, ${dia.fei}, ${dia.pro} + ${dia.aco}<button class="btn-reroll" onclick="app.reroll('${n}','almoco')">🎲</button></td>
                     <td>${dia.lT}<button class="btn-reroll" onclick="app.reroll('${n}','lancheT')">🎲</button></td>
                     <td>${dia.jan}<button class="btn-reroll" onclick="app.reroll('${n}','jantar')">🎲</button></td></tr>`;
             });
