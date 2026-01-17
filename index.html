@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio Inteligente v21 - Completo</title>
+    <title>Cardápio Inteligente v21.1</title>
     <style>
         :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; }
         body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
@@ -20,9 +20,8 @@
         .hoje-row { background: #e8f5e9 !important; font-weight: bold; border: 2px solid var(--primary) !important; }
         .edit-box { width: 100%; min-height: 60px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-family: inherit; }
         .item-compra { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
-        .item-compra input { width: 18px; height: 18px; }
         .checked { text-decoration: line-through; color: #aaa; }
-        .opcao2 { background: #fff3e0; padding: 8px; border-radius: 5px; border: 1px dashed #ff9800; margin-top: 8px; font-size: 13px; color: #e65100; font-weight: bold; }
+        .opcao2 { background: #fff3e0; padding: 10px; border-radius: 5px; border: 1px dashed #ff9800; margin-top: 10px; font-size: 13px; color: #e65100; }
     </style>
 </head>
 <body>
@@ -34,30 +33,35 @@
         <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
         <button class="tab" onclick="app.mudarAba('compras', this)">Lista de Compras</button>
     </div>
-    <div id="conteudo-principal">Iniciando sistema...</div>
+    <div id="conteudo-principal">Carregando cardápio atualizado...</div>
 </div>
 
 <script>
 const app = {
     base: {
         cafe: [
-            { t: "Pão com ovo", l: false },
-            { t: "Cuscuz com ovo", l: false },
-            { t: "Mingau de tapioca", l: true },
-            { t: "Mingau de milho", l: true },
-            { t: "Aipim cozido com manteiga", l: false }
+            { t: "Pão com ovo", l: false, s: "" },
+            { t: "Cuscuz com ovo", l: false, s: "" },
+            { t: "Mingau de tapioca", l: true, s: "Pão com Manteiga e Café" },
+            { t: "Mingau de milho", l: true, s: "Pão com Queijo e Café" },
+            { t: "Aipim cozido com manteiga", l: false, s: "" }
         ],
-        bebidas: ["Café puro", "Suco de Laranja", "Chá de Erva-doce", "Café com Canela", "Suco de Abacaxi"],
-        frangos: ["Frango Assado", "Frango Grelhado", "Frango Ensopado com Batata", "Strogonoff de Frango", "Frango com Quiabo"],
-        carnes: ["Carne moída com legumes", "Bife acebolado", "Almôndegas ao molho", "Iscas de carne com pimentão"],
-        acompa: ["Puré de batata", "Salada de alface e tomate", "Couve refogada", "Farofa de ovos", "Creme de milho"],
+        bebidas: ["Café puro", "Suco de Laranja", "Chá de Erva-doce", "Suco de Abacaxi", "Limonada"],
+        frangos: ["Frango Assado", "Frango Grelhado", "Frango Ensopado", "Strogonoff de Frango", "Frango com Quiabo"],
+        carnes: ["Carne moída", "Bife acebolado", "Almôndegas", "Iscas de carne"],
+        acompa: ["Puré de batata", "Salada", "Couve refogada", "Farofa de ovos", "Creme de milho"],
         lanchesM: ["Banana", "Maçã", "Uva", "Pera", "Melancia"],
-        lanchesT: ["Iogurte", "Bolo de Cenoura", "Pão de Queijo", "Pipoca", "Sanduíche Natural de Frango"],
-        jantares: ["Sopa de Lentilha", "Omelete Recheada com Queijo", "Canja de Galinha", "Tapioca com Frango", "Caldo Verde", "Sopa de Macarrão", "Cuscuz Temperado"]
+        lanchesT: ["Iogurte", "Bolo Caseiro", "Pão de Queijo", "Pipoca", "Sanduíche"],
+        jantares: ["Sopa de Lentilha", "Omelete Recheada", "Canja de Galinha", "Tapioca com Frango", "Caldo Verde"]
     },
 
     init() {
-        if (!localStorage.getItem("plano_v21")) this.gerar();
+        // Força novo sorteio para a v21.1
+        if (localStorage.getItem("app_ver") !== "21.1") {
+            localStorage.clear();
+            localStorage.setItem("app_ver", "21.1");
+            this.gerar();
+        }
         this.mudarAba('dia');
     },
 
@@ -65,28 +69,28 @@ const app = {
         const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         let plano = {};
         dias.forEach((d, i) => {
-            const protAlmoco = (i % 2 === 0) ? this.base.frangos[i % 5] : this.base.carnes[i % 4];
-            const cafeItem = this.base.cafe[i % 5];
+            const cafeObj = this.base.cafe[i % 5];
+            const protAlm = (i % 2 === 0) ? this.base.frangos[i % 5] : this.base.carnes[i % 4];
+            const acompAlm = this.base.acompa[i % 5];
+            
             plano[d] = {
-                cafe: cafeItem.t,
-                isLiq: cafeItem.l,
-                bebida: this.base.bebidas[i % 5],
+                cafe: cafeObj.t,
+                isMingau: cafeObj.l,
+                opcaoSecundaria: cafeObj.s,
+                bebida: cafeObj.l ? "" : this.base.bebidas[i % 5],
                 lancheM: this.base.lanchesM[i % 5],
-                almoco: `• Arroz e Feijão<br>• ${protAlmoco}<br>• ${this.base.acompa[i % 5]}`,
+                almoco_main: protAlm,
+                almoco_acomp: acompAlm,
                 lancheT: this.base.lanchesT[i % 5],
-                jantar: this.base.jantares[i % 7],
-                // Identificadores para salvar ingredientes
-                cafe_n: cafeItem.t,
-                almoco_n: protAlmoco,
-                jantar_n: this.base.jantares[i % 7]
+                jantar: this.base.jantares[i % 5]
             };
         });
-        localStorage.setItem("plano_v21", JSON.stringify(plano));
+        localStorage.setItem("plano_data", JSON.stringify(plano));
     },
 
     mudarAba(aba, btn) {
         const painel = document.getElementById("conteudo-principal");
-        const plano = JSON.parse(localStorage.getItem("plano_v21"));
+        const plano = JSON.parse(localStorage.getItem("plano_data"));
         if (btn) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
@@ -98,54 +102,53 @@ const app = {
         const d = plano[diasNomes[hojeIdx]];
 
         if (aba === 'dia') {
+            let cafeHtml = `<b>${d.cafe}</b>`;
+            if (d.bebida) cafeHtml += `<br>• ${d.bebida}`;
+            if (d.isMingau) cafeHtml += `<div class="opcao2">🥪 <b>Opção 2 (Sólida):</b><br>${d.opcaoSecundaria}</div>`;
+
             painel.innerHTML = `
-                <div class="bloco"><h3>☕ Café da Manhã</h3><p>${d.cafe}<br>• ${d.bebida}</p>${d.isLiq ? '<div class="opcao2">💡 Opção 2: Pão com Café e Manteiga</div>' : ''}</div>
-                <div class="bloco"><h3>🍎 Lanche da Manhã</h3><p>${d.lancheM}</p></div>
-                <div class="bloco"><h3>🍛 Almoço</h3><p>${d.almoco}</p></div>
-                <div class="bloco"><h3>🍪 Lanche da Tarde</h3><p>${d.lancheT}</p></div>
+                <div class="bloco"><h3>☕ Café da Manhã</h3><p>${cafeHtml}</p></div>
+                <div class="bloco"><h3>🍎 Lanche Manhã</h3><p>${d.lancheM}</p></div>
+                <div class="bloco"><h3>🍛 Almoço</h3><p>• Arroz e Feijão<br>• ${d.almoco_main}<br>• ${d.almoco_acomp}</p></div>
+                <div class="bloco"><h3>🍪 Lanche Tarde</h3><p>${d.lancheT}</p></div>
                 <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jantar}</p></div>
             `;
         } else if (aba === 'semana') {
-            let html = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>L. Manhã</th><th>Almoço</th><th>L. Tarde</th><th>Jantar</th></tr>';
+            let html = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>Almoço</th><th>Jantar</th></tr>';
             diasNomes.forEach((dn, i) => {
                 const dia = plano[dn];
                 html += `<tr class="${i === hojeIdx ? 'hoje-row' : ''}">
                     <td><b>${dn}</b></td>
-                    <td>${dia.cafe}<br><small>(${dia.bebida})</small></td>
-                    <td>${dia.lancheM}</td>
-                    <td>${dia.almoco}</td>
-                    <td>${dia.lancheT}</td>
+                    <td>${dia.cafe} ${dia.bebida ? '('+dia.bebida+')' : ''}</td>
+                    <td>${dia.almoco_main}<br>+ ${dia.almoco_acomp}</td>
                     <td>${dia.jantar}</td>
                 </tr>`;
             });
             painel.innerHTML = html + '</table></div>';
         } else if (aba === 'receitas') {
-            let html = '<h2>Ingredientes Fixos</h2><p><small>O que digitar aqui será salvo para este prato permanentemente.</small></p>';
-            const itensParaSalvar = [d.cafe_n, d.almoco_n, d.jantar_n];
-            itensParaSalvar.forEach(nome => {
-                const salvo = localStorage.getItem("ing_"+nome) || "";
-                html += `<div class="bloco"><h3>${nome}</h3>
-                <textarea class="edit-box" oninput="localStorage.setItem('ing_${nome}', this.value)" placeholder="Digite ingredientes separados por vírgula...">${salvo}</textarea></div>`;
+            let html = '<h2>Ingredientes das Receitas</h2>';
+            const pratos = [d.cafe, d.almoco_main, d.almoco_acomp, d.jantar];
+            pratos.forEach(p => {
+                const salvo = localStorage.getItem("ing_"+p) || "";
+                html += `<div class="bloco"><h3>${p}</h3>
+                <textarea class="edit-box" oninput="localStorage.setItem('ing_${p}', this.value)" placeholder="Vírgula entre os itens...">${salvo}</textarea></div>`;
             });
             painel.innerHTML = html;
         } else if (aba === 'compras') {
-            let itens = new Set(["Arroz", "Feijão", "Açúcar", "Café em pó", "Sal", "Óleo"]);
+            let itens = new Set(["Arroz", "Feijão", "Açúcar", "Café"]);
             diasNomes.forEach(dn => {
                 const dia = plano[dn];
-                itens.add(dia.bebida);
+                if(dia.bebida) itens.add(dia.bebida);
                 itens.add(dia.lancheM);
                 itens.add(dia.lancheT);
-                [dia.cafe_n, dia.almoco_n, dia.jantar_n].forEach(nomePrato => {
-                    const ing = localStorage.getItem("ing_"+nomePrato);
-                    if(ing) {
-                        ing.split(',').forEach(i => { if(i.trim().length > 0) itens.add(i.trim()); });
-                    }
+                [dia.cafe, dia.almoco_main, dia.almoco_acomp, dia.jantar].forEach(p => {
+                    const ing = localStorage.getItem("ing_"+p);
+                    if(ing) ing.split(',').forEach(i => { if(i.trim()) itens.add(i.trim()); });
                 });
             });
-
-            let html = '<h2>Lista de Compras / Estoque</h2><div class="bloco">';
-            Array.from(itens).sort().forEach((item, i) => {
-                html += `<label class="item-compra"><input type="checkbox" onclick="this.parentNode.classList.toggle('checked')"><span>${item}</span></label>`;
+            let html = '<h2>Lista de Compras</h2><div class="bloco">';
+            Array.from(itens).sort().forEach(it => {
+                html += `<label class="item-compra"><input type="checkbox" onclick="this.parentNode.classList.toggle('checked')"> ${it}</label>`;
             });
             painel.innerHTML = html + '</div>';
         }
