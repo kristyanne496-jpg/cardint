@@ -240,15 +240,16 @@ semana[d] = {
         const info = this.obterDadosHoje();
         
         if (aba === 'dia') {
-            this.renderDia(container, info);
-        } else if (aba === 'semana') {
-            this.renderSemana(container);
-        } else if (aba === 'compras') {
-            this.renderCompras(container);
-        }
-        
-        document.getElementById("status-plano").innerText = `Dia ${info.diaGlobal + 1} de 84 (12 Semanas)`;
-    },
+            // Adicione esta linha logo antes do container.innerHTML:
+const avisoPreparo = `
+    <div class="aviso-fluxo">
+        📢 <strong>Organização:</strong> Prepare agora o lanche da tarde (${d.lancheT}) 
+        e verifique os ingredientes do jantar.
+    </div>`;
+
+// E no innerHTML, chame a variável:
+container.innerHTML = avisoPreparo + `... resto do seu código ...`;
+
 
     renderDia(el, info) {
         const d = info.dados;
