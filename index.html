@@ -3,30 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio Inteligente v14.R (Revisada)</title>
+    <title>Cardápio Inteligente v17 - Memória Ativa</title>
     <style>
-        :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; --accent: #ff9800; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); line-height: 1.4; }
-        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        
-        .nav-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #eee; padding: 5px; border-radius: 10px; }
+        :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #eee; padding: 5px; border-radius: 10px; }
         .tab { flex: 1; padding: 12px 5px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; border: none; background: none; }
         .tab.active { background: var(--primary); color: white; }
-
         .bloco { border-left: 5px solid var(--primary); background: #f9f9f9; padding: 15px; margin-bottom: 12px; border-radius: 5px; }
         .bloco h3 { margin: 0 0 5px 0; font-size: 0.85em; color: #666; text-transform: uppercase; }
-        
-        /* Aba Ingredientes Editável */
-        .editavel { border: 1px solid #ddd; padding: 15px; background: white; border-radius: 8px; min-height: 250px; outline: none; width: 100%; box-sizing: border-box; font-family: inherit; font-size: 14px; white-space: pre-wrap; }
-        .editavel:focus { border-color: var(--primary); border-width: 2px; }
-
-        .table-wrapper { width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 950px; }
+        .edit-box { width: 100%; min-height: 80px; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px; font-family: inherit; font-size: 14px; box-sizing: border-box; }
+        .save-msg { color: var(--primary); font-size: 11px; font-weight: bold; display: none; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background: var(--primary); color: white; padding: 10px; font-size: 11px; }
-        td { padding: 10px; border: 1px solid #eee; font-size: 11px; vertical-align: top; background: white; }
+        td { padding: 10px; border: 1px solid #eee; font-size: 11px; background: white; }
         .hoje-col { background: #e8f5e9 !important; font-weight: bold; border: 2px solid var(--primary) !important; }
-        
-        .compras-item { display: inline-block; background: #eee; padding: 5px 10px; margin: 3px; border-radius: 15px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -38,41 +30,39 @@
         <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
         <button class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
     </div>
-    <div id="conteudo-principal">Carregando cardápio...</div>
+    <div id="conteudo-principal">Carregando cardápio v17...</div>
 </div>
 
 <script>
 const app = {
-    banco: {
+    // Banco original (Backup)
+    base: {
         cafe: [
             { t: "Pão com ovo", c: "sol", i: "Pão, Ovos, Manteiga" },
-            { t: "Pão com manteiga", c: "sol", i: "Pão francês, Manteiga" },
-            { t: "Mingau de tapioca", c: "liq", i: "Tapioca granulada, Leite, Açúcar" },
-            { t: "Mingau de milho", c: "liq", i: "Milho, Leite, Canela" },
-            { t: "Cuscuz com ovo", c: "sol", i: "Flocão de milho, Ovos, Manteiga" },
-            { t: "Pão com queijo e presunto", c: "sol", i: "Pão, Queijo, Presunto" },
-            { t: "Aipim cozido", c: "sol", i: "Aipim, Sal, Manteiga" },
-            { t: "Batata doce cozida", c: "sol", i: "Batata doce" },
-            { t: "Tapioca com coco", c: "sol", i: "Goma de tapioca, Coco ralado" }
+            { t: "Cuscuz com ovo", c: "sol", i: "Milho, Ovos" },
+            { t: "Mingau de tapioca", c: "liq", i: "Tapioca, Leite" },
+            { t: "Mingau de milho", c: "liq", i: "Milho, Leite" },
+            { t: "Aipim cozido", c: "sol", i: "Aipim, Manteiga" }
         ],
         almoco: {
             arroz: ["Arroz Branco", "Arroz com Cenoura"],
             feijoes: ["Carioca", "Preto", "Fradinho"],
-            proteinas: ["Frango assado", "Carne moída", "Bife no molho", "Peixe frito", "Fígado acebolado", "Almôndegas"],
-            acompa: ["Puré de batata", "Salada de maionese", "Couve refogada", "Farofa", "Creme de milho", "Vinagrete"]
+            prot: ["Frango assado", "Carne moída", "Bife", "Peixe"],
+            acompa: ["Puré", "Salada", "Couve", "Farofa"]
         },
-        jantar: [
-            { t: "Sopa de legumes", c: "liq", i: "Legumes, Macarrão" },
-            { t: "Arroz com ovo", c: "sol", i: "Arroz, Ovos" },
-            { t: "Pizza caseira", c: "sol", i: "Massa, Queijo, Molho" },
-            { t: "Cuscuz temperado", c: "sol", i: "Milho, Calabresa, Ovos" },
-            { t: "Tapioca de frango", c: "sol", i: "Goma, Frango desfiado" },
-            { t: "Hambúrguer", c: "sol", i: "Pão, Carne, Alface" },
-            { t: "Caldo de Aipim", c: "liq", i: "Aipim, Carne seca" }
-        ],
-        bebidasCafe: ["Café puro", "Leite", "Chá de Capim Santo", "Suco de Laranja"],
-        lanchesM: ["Banana", "Maçã", "Uva", "Melancia", "Pera", "Morango", "Manga", "Abacaxi", "Kiwi"],
-        lanchesT: ["Iogurte Natural", "Bolo de Cenoura", "Pão de Queijo", "Pipoca", "Sanduíche Natural", "Vitamina de Morango", "Bolacha Maria", "Salada de Frutas"]
+        lanchesM: ["Banana", "Maçã", "Uva", "Pera"],
+        lanchesT: ["Iogurte", "Bolo", "Pão de Queijo", "Pipoca"]
+    },
+
+    // Função para pegar ingrediente personalizado ou o padrão
+    getIng(nome, padrao) {
+        return localStorage.getItem("ing_" + nome) || padrao;
+    },
+
+    salvarIng(nome, texto) {
+        localStorage.setItem("ing_" + nome, texto);
+        document.getElementById("msg-" + nome.replace(/\s/g, '')).style.display = "inline";
+        setTimeout(() => { document.querySelectorAll('.save-msg').forEach(m => m.style.display='none'); }, 2000);
     },
 
     shuffle(array) {
@@ -87,44 +77,30 @@ const app = {
     gerarTudo() {
         const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         let plano = {};
-        
-        let dCafe = this.shuffle(this.banco.cafe);
-        let dLM = this.shuffle(this.banco.lanchesM);
-        let dLT = this.shuffle(this.banco.lanchesT);
-        let dJan = this.shuffle(this.banco.jantar);
-        let dProt = this.shuffle(this.banco.almoco.proteinas);
-        let dAcom = this.shuffle(this.banco.almoco.acompa);
-
-        // Regra do Feijão (4 dias iguais)
-        const f1 = this.banco.almoco.feijoes[Math.floor(Math.random()*3)];
-        const f2 = this.banco.almoco.feijoes.filter(f => f !== f1)[0];
+        let dCafe = this.shuffle(this.base.cafe);
+        let dLM = this.shuffle(this.base.lanchesM);
+        let dLT = this.shuffle(this.base.lanchesT);
+        let dProt = this.shuffle(this.base.almoco.prot);
+        const f1 = this.base.almoco.feijoes[0];
+        const f2 = this.base.almoco.feijoes[1];
 
         dias.forEach((d, index) => {
-            const itemC = dCafe[index] || dCafe[0];
-            const itemJ = dJan[index % dJan.length];
-            const isFDS = (d === "SÁBADO" || d === "DOMINGO");
-
-            // Bebida Única
-            const bebC = itemC.c === "liq" ? "" : "• " + this.banco.bebidasCafe[Math.floor(Math.random()*4)];
-            const feijaoDoDia = (index < 4) ? f1 : f2;
-            
-            let pAlmoco = dProt[index % dProt.length];
-            if (isFDS && pAlmoco.includes("Fígado")) pAlmoco = "Bife de Frango";
+            const itemC = dCafe[index % dCafe.length];
+            const feijao = (index < 4) ? f1 : f2;
+            const itemP = dProt[index % dProt.length];
 
             plano[d] = {
-                cafe: { txt: `${itemC.t}<br>${bebC}`, ing: itemC.i, liq: itemC.c === "liq" },
-                lancheM: dLM[index] || "Maçã",
-                almoco: {
-                    txt: `• ${this.banco.almoco.arroz[index % 2]}<br>• Feijão ${feijaoDoDia}<br>• ${pAlmoco}<br>• ${dAcom[index % dAcom.length]}<br>• 🥤 Suco`,
-                    ing: `Arroz, Feijão ${feijaoDoDia}, ${pAlmoco}, ${dAcom[index % dAcom.length]}`,
-                    sob: isFDS ? "🍮 Sobremesa" : ""
-                },
-                lancheT: dLT[index] || "Iogurte",
-                jantar: { txt: `${itemJ.t}${itemJ.c === "liq" ? "" : "<br>• 🥤 Suco"}`, ing: itemJ.i }
+                cafe_nome: itemC.t,
+                cafe_txt: `${itemC.t}${itemC.c === "liq" ? "" : "<br>• Café"}`,
+                isLiq: itemC.c === "liq",
+                lancheM: dLM[index % dLM.length],
+                almoco_nome: itemP,
+                almoco_txt: `• ${this.base.almoco.arroz[index % 2]}<br>• Feijão ${feijao}<br>• ${itemP}<br>• ${this.base.almoco.acompa[index % 4]}`,
+                lancheT: dLT[index % dLT.length],
+                jantar_nome: "Arroz com Ovo"
             };
         });
-
-        localStorage.setItem("plano_v14_final", JSON.stringify(plano));
+        localStorage.setItem("plano_v17", JSON.stringify(plano));
         return plano;
     },
 
@@ -135,60 +111,47 @@ const app = {
             btn.classList.add('active');
         }
 
-        let plano = JSON.parse(localStorage.getItem("plano_v14_final")) || this.gerarTudo();
+        let plano = JSON.parse(localStorage.getItem("plano_v17")) || this.gerarTudo();
         const diasNomes = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         const hojeIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
-        const diaNome = diasNomes[hojeIdx];
-        const d = plano[diaNome];
+        const d = plano[diasNomes[hojeIdx]];
 
         if (aba === 'dia') {
             container.innerHTML = `
-                <div class="bloco"><h3>☕ Café</h3><p>${d.cafe.txt}</p></div>
-                <div class="bloco"><h3>🍎 Lanche M</h3><p>${d.lancheM}</p></div>
-                <div class="bloco"><h3>🍛 Almoço</h3><p>${d.almoco.txt}</p><b>${d.almoco.sob}</b></div>
-                <div class="bloco"><h3>🍪 Lanche T</h3><p>${d.lancheT}</p></div>
-                <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jantar.txt}</p></div>
+                <div class="bloco"><h3>☕ Café</h3><p>${d.cafe_txt}</p>${d.isLiq ? '<b>Opção 2: Pão com Café</b>' : ''}</div>
+                <div class="bloco"><h3>🍛 Almoço</h3><p>${d.almoco_txt}</p></div>
+                <div class="bloco"><h3>🍪 Lanche Tarde</h3><p>${d.lancheT}</p></div>
             `;
-        } 
-        else if (aba === 'semana') {
-            let html = `<div class="table-wrapper"><table><tr><th>Refeição</th>`;
+        } else if (aba === 'receitas') {
+            // Interface de Edição Permanente
+            container.innerHTML = `
+                <h2>Personalizar Ingredientes</h2>
+                <div class="bloco">
+                    <h3>Ingredientes: ${d.cafe_nome}</h3>
+                    <textarea class="edit-box" oninput="app.salvarIng('${d.cafe_nome}', this.value)">${this.getIng(d.cafe_nome, "Ingredientes padrão do café...")}</textarea>
+                    <span class="save-msg" id="msg-${d.cafe_nome.replace(/\s/g, '')}">✓ Salvo para o futuro!</span>
+                </div>
+                <div class="bloco">
+                    <h3>Ingredientes: ${d.almoco_nome}</h3>
+                    <textarea class="edit-box" oninput="app.salvarIng('${d.almoco_nome}', this.value)">${this.getIng(d.almoco_nome, "Ingredientes padrão do almoço...")}</textarea>
+                    <span class="save-msg" id="msg-${d.almoco_nome.replace(/\s/g, '')}">✓ Salvo para o futuro!</span>
+                </div>
+            `;
+        } else if (aba === 'semana') {
+            let html = `<table><tr><th>Refeição</th>`;
             diasNomes.forEach((dn, i) => html += `<th class="${i===hojeIdx?'hoje-col':''}">${dn}</th>`);
             html += `</tr>`;
-            const refs = [{n:"Café",k:"cafe"},{n:"L. Manhã",k:"lancheM"},{n:"Almoço",k:"almoco"},{n:"L. Tarde",k:"lancheT"},{n:"Jantar",k:"jantar"}];
-            refs.forEach(r => {
-                html += `<tr><td style="font-weight:bold; background:#f9f9f9">${r.n}</td>`;
-                diasNomes.forEach((dn, i) => {
-                    let dado = plano[dn][r.k];
-                    html += `<td class="${i===hojeIdx?'hoje-col':''}">${dado.txt || dado}</td>`;
-                });
+            ["cafe_txt", "lancheM", "almoco_txt", "lancheT"].forEach(k => {
+                html += `<tr><td><b>${k}</b></td>`;
+                diasNomes.forEach((dn, i) => html += `<td class="${i===hojeIdx?'hoje-col':''}">${plano[dn][k]}</td>`);
                 html += `</tr>`;
             });
-            container.innerHTML = html + `</table></div>`;
-        }
-        else if (aba === 'receitas') {
-            const salvo = localStorage.getItem("nota_ing") || `HOJE (${diaNome}):\n- Café: ${d.cafe.ing}\n- Almoço: ${d.almoco.ing}\n- Jantar: ${d.jantar.ing}`;
-            container.innerHTML = `
-                <h2>Ingredientes e Notas (Editável)</h2>
-                <textarea class="editavel" oninput="localStorage.setItem('nota_ing', this.value)">${salvo}</textarea>
-            `;
-        }
-        else if (aba === 'compras') {
-            let todos = [];
-            diasNomes.forEach(dn => {
-                todos.push(plano[dn].cafe.ing, plano[dn].lancheM, plano[dn].lancheT, plano[dn].jantar.ing);
-            });
-            let unique = [...new Set(todos.join(', ').split(', '))].sort();
-            container.innerHTML = `<h2>Lista de Compras</h2><div class="bloco">${unique.map(i => `<span class="compras-item">${i}</span>`).join('')}</div>`;
+            container.innerHTML = html + `</table>`;
         }
     }
 };
 
-window.onload = () => {
-    // Força a exibição imediata
-    const container = document.getElementById("conteudo-principal");
-    container.innerHTML = "Iniciando...";
-    app.mudarAba('dia');
-};
+window.onload = () => app.mudarAba('dia');
 </script>
 </body>
 </html>
