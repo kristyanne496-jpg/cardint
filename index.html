@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio Inteligente v19</title>
+    <title>Cardápio Inteligente v20</title>
     <style>
         :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; }
         body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #ddd; padding: 5px; border-radius: 8px; }
-        .tab { flex: 1; padding: 10px; text-align: center; border-radius: 6px; cursor: pointer; font-weight: bold; border: none; background: #eee; font-size: 12px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .nav-tabs { display: flex; gap: 4px; margin-bottom: 15px; background: #ddd; padding: 4px; border-radius: 8px; overflow-x: auto; }
+        .tab { flex: 1; padding: 10px 4px; text-align: center; border-radius: 6px; cursor: pointer; font-weight: bold; border: none; background: #eee; font-size: 11px; white-space: nowrap; }
         .tab.active { background: var(--primary); color: white; }
         .bloco { border-left: 4px solid var(--primary); background: #f1f1f1; padding: 12px; margin-bottom: 10px; border-radius: 4px; }
         h3 { margin: 0 0 5px 0; font-size: 11px; color: #666; text-transform: uppercase; }
-        p { margin: 0; font-size: 15px; }
-        .edit-box { width: 100%; height: 60px; margin-top: 5px; padding: 8px; box-sizing: border-box; }
-        .item-compra { display: block; padding: 8px; border-bottom: 1px solid #eee; font-size: 14px; }
-        .item-compra input { margin-right: 10px; }
+        .table-wrap { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; font-size: 11px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+        th { background: #eee; }
+        .hoje { background: #e8f5e9 !important; border: 2px solid var(--primary) !important; }
+        .item-compra { display: block; padding: 6px; border-bottom: 1px solid #eee; }
         .checked { text-decoration: line-through; color: #999; }
     </style>
 </head>
@@ -25,68 +27,52 @@
 <div class="container">
     <div class="nav-tabs">
         <button class="tab active" onclick="app.aba('dia', this)">Hoje</button>
+        <button class="tab" onclick="app.aba('semana', this)">Tabela</button>
         <button class="tab" onclick="app.aba('receitas', this)">Ingredientes</button>
         <button class="tab" onclick="app.aba('compras', this)">Compras</button>
     </div>
-    
-    <div id="painel">
-        <p>A iniciar sistema... se não carregar, <a href="#" onclick="app.reset()">clique aqui para resetar</a>.</p>
-    </div>
+    <div id="painel">Carregando...</div>
 </div>
 
 <script>
 const app = {
-    // Dados fixos
     base: {
-        cafe: ["Pão com ovo", "Cuscuz", "Mingau de milho", "Mingau de tapioca", "Aipim"],
-        almoco: ["Frango", "Carne moída", "Bife", "Peixe", "Almôndegas"],
-        acompa: ["Puré", "Salada", "Couve", "Farofa"],
-        lanches: ["Banana", "Maçã", "Uva", "Melancia", "Iogurte", "Bolo"],
-        bebidas: ["Café", "Leite", "Suco", "Chá"]
+        cafe: ["Pão com ovo", "Cuscuz", "Mingau de milho", "Mingau de tapioca", "Aipim cozido"],
+        bebidas: ["Café puro", "Suco de Laranja", "Chá de Erva-doce", "Café com Manteiga"],
+        frangos: ["Frango Assado", "Frango Grelhado", "Frango Ensopado", "Strogonoff de Frango", "Frango com Quiabo"],
+        carnes: ["Carne moída com batata", "Bife acebolado", "Almôndegas ao molho", "Iscas de carne"],
+        acompa: ["Puré de batata", "Salada de alface/tomate", "Couve refogada", "Farofa de ovos"],
+        jantares: ["Sopa de Lentilha", "Omelete Recheada", "Canja de Galinha", "Tapioca com Frango", "Macarrão Alho e Óleo", "Caldo Verde", "Sanduíche Natural"],
+        lanches: ["Banana", "Maçã", "Uva", "Melancia", "Iogurte", "Bolo Caseiro"]
     },
 
     init() {
-        try {
-            // Se for a primeira vez ou versão antiga, limpa tudo
-            if (localStorage.getItem("v_app") !== "19") {
-                localStorage.clear();
-                localStorage.setItem("v_app", "19");
-            }
-            if (!localStorage.getItem("plano")) this.gerar();
-            this.aba('dia');
-        } catch (e) {
-            document.getElementById("painel").innerHTML = "Erro ao carregar. <button onclick='app.reset()'>Resetar</button>";
-        }
-    },
-
-    reset() {
-        localStorage.clear();
-        location.reload();
+        if (!localStorage.getItem("plano_v20")) this.gerar();
+        this.aba('dia');
     },
 
     gerar() {
         const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         let plano = {};
-        const f1 = "Carioca";
-        const f2 = "Preto";
-
         dias.forEach((d, i) => {
+            const protAlmoco = (i % 2 === 0) ? this.base.frangos[i % 5] : this.base.carnes[i % 4];
             plano[d] = {
                 cafe: this.base.cafe[i % 5],
                 bebida: this.base.bebidas[i % 4],
                 lanche: this.base.lanches[i % 6],
-                almoco: this.base.almoco[i % 5],
-                acompa: this.base.acompa[i % 4],
-                feijao: (i < 4) ? f1 : f2,
-                jantar: "Sopa ou Arroz com Ovo"
+                almoco: `• Arroz e Feijão<br>• ${protAlmoco}<br>• ${this.base.acompa[i % 4]}`,
+                jantar: this.base.jantares[i % 7],
+                cafe_nome: this.base.cafe[i % 5],
+                almoco_nome: protAlmoco,
+                jantar_nome: this.base.jantares[i % 7]
             };
         });
-        localStorage.setItem("plano", JSON.stringify(plano));
+        localStorage.setItem("plano_v20", JSON.stringify(plano));
     },
 
     aba(nome, btn) {
         const painel = document.getElementById("painel");
-        const plano = JSON.parse(localStorage.getItem("plano"));
+        const plano = JSON.parse(localStorage.getItem("plano_v20"));
         if (btn) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
@@ -101,37 +87,39 @@ const app = {
             painel.innerHTML = `
                 <div class="bloco"><h3>☕ Café</h3><p>${d.cafe}<br>• ${d.bebida}</p></div>
                 <div class="bloco"><h3>🍎 Lanche</h3><p>${d.lanche}</p></div>
-                <div class="bloco"><h3>🍛 Almoço</h3><p>• Arroz<br>• Feijão ${d.feijao}<br>• ${d.almoco}<br>• ${d.acompa}</p></div>
-                <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jantar}</p></div>
+                <div class="bloco"><h3>🍛 Almoço</h3><p>${d.almoco}</p></div>
+                <div class="bloco"><h3>🌙 Jantar Específico</h3><p>${d.jantar}</p></div>
             `;
+        } else if (nome === 'semana') {
+            let html = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>Almoço</th><th>Jantar</th></tr>';
+            dias.forEach((dn, i) => {
+                const dia = plano[dn];
+                html += `<tr class="${i === idx ? 'hoje' : ''}"><td><b>${dn}</b></td><td>${dia.cafe}</td><td>${dia.almoco}</td><td>${dia.jantar}</td></tr>`;
+            });
+            painel.innerHTML = html + '</table></div>';
         } else if (nome === 'receitas') {
-            let html = "<h2>Ingredientes Permanentes</h2>";
-            const refs = [d.cafe, d.almoco, d.jantar];
-            refs.forEach(r => {
+            let html = '<h2>Ingredientes Permanentes</h2>';
+            [d.cafe_nome, d.almoco_nome, d.jantar_nome].forEach(r => {
                 const salvo = localStorage.getItem("ing_"+r) || "";
-                html += `<div class="bloco"><h3>${r}</h3>
-                <textarea class="edit-box" oninput="localStorage.setItem('ing_${r}', this.value)" placeholder="Digite ingredientes...">${salvo}</textarea></div>`;
+                html += `<div class="bloco"><h3>${r}</h3><textarea style="width:100%; height:50px;" oninput="localStorage.setItem('ing_${r}', this.value)" placeholder="Vírgula entre itens...">${salvo}</textarea></div>`;
             });
             painel.innerHTML = html;
         } else if (nome === 'compras') {
-            let itens = new Set(["Arroz", "Feijão", "Açúcar", "Café"]);
-            dias.forEach(dia => {
-                const dd = plano[dia];
-                itens.add(dd.lanche);
-                itens.add(dd.bebida);
-                const p1 = localStorage.getItem("ing_"+dd.cafe);
-                const p2 = localStorage.getItem("ing_"+dd.almoco);
-                if(p1) p1.split(',').forEach(i => itens.add(i.trim()));
-                if(p2) p2.split(',').forEach(i => itens.add(i.trim()));
+            let itens = new Set();
+            dias.forEach(dn => {
+                const dia = plano[dn];
+                itens.add(dia.bebida);
+                itens.add(dia.lanche);
+                [dia.cafe_nome, dia.almoco_nome, dia.jantar_nome].forEach(r => {
+                    const ing = localStorage.getItem("ing_"+r);
+                    if(ing) ing.split(',').forEach(i => itens.add(i.trim()));
+                });
             });
-
-            let html = "<h2>Lista de Compras</h2><div class='bloco'>";
+            let html = '<h2>Checklist de Compras</h2><div class="bloco">';
             Array.from(itens).sort().forEach((it, i) => {
-                if(it.length > 2) {
-                    html += `<label class="item-compra"><input type="checkbox" onclick="this.parentNode.classList.toggle('checked')"> ${it}</label>`;
-                }
+                if(it.length > 2) html += `<label class="item-compra"><input type="checkbox" onclick="this.parentNode.classList.toggle('checked')"> ${it}</label>`;
             });
-            painel.innerHTML = html + "</div>";
+            painel.innerHTML = html + '</div>';
         }
     }
 };
