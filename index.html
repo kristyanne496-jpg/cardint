@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Cardápio Inteligente</title>
+    <style>
+        :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        
+        .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #eee; padding: 5px; border-radius: 10px; }
+        .tab { flex: 1; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .tab.active { background: var(--primary); color: white; }
+
+        .table-wrapper { width: 100%; overflow-x: auto; margin-top: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { background: var(--primary); color: white; padding: 10px; font-size: 0.9em; }
+        td { padding: 10px; border: 1px solid #eee; vertical-align: top; font-size: 0.85em; }
+        .ref-label { font-weight: bold; color: var(--primary); display: block; margin-bottom: 3px; border-bottom: 1px solid #eee; }
+
+        .card-hoje { border: 2px solid var(--primary); padding: 15px; border-radius: 10px; background: #fff; }
+        .item-box { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid var(--primary); }
+        
+        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="nav-tabs">
+        <div class="tab active" onclick="app.mudarAba('dia')">HOJE</div>
+        <div class="tab" onclick="app.mudarAba('semana')">TABELA DA SEMANA</div>
+        <div class="tab" onclick="app.mudarAba('compras')">COMPRAS</div>
+    </div>
+    <div id="conteudo-principal">Carregando cardápio...</div>
+</div>
+
+<script>
+const app = {
+    config: { totalSemanas: 12 },
+    banco: {
+        cafe: ["Pão francês","Tapioca","Cuscuz","Pão de forma","Bolo"],
+        acompa: ["Manteiga","Ovo mexido","Queijo","Presunto"],
+        bebida: ["Café","Suco","Vitamina","Leite"],
+        proteina: ["Frango grelhado","Carne moída","Bife acebolado","Peixe frito","Ovo cozido"],
+        feijao: ["Feijão preto","Feijão carioca","Feijão fradinho"],
+        acompaAlmoco: ["Arroz branco","Purê","Macarrão","Chuchu cozido","Batata doce"],
+        sucos: ["Maracujá","Laranja","Abacaxi","Limão"],
+        lanches: ["Banana","Maçã","Iogurte","Pera","Biscoito"],
+        jantar: ["Arroz com ovo","Sopa de legumes","Tapioca recheada","Macarrão com frango"]
+    },
+
+    escolher(lista) { return lista[Math.floor(Math.random() * lista.length)]; },
+
+    gerarTudo() {
+        let plano = [];
+        const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
+        for (let s = 0; s < this.config.totalSemanas; s++) {
+            let semana = {};
+            dias.forEach(d => {
+                semana[d] = {
+                    cafe: `${this.escolher(this.banco.cafe)} com ${this.escolher(this.banco.acompa)}<br>• ${this.escolher(this.banco.bebida)}`,
+                    lancheM: this.escolher(this.banco.lanches),
+                    almoco: `Arroz branco<br>• ${this.escolher(this.banco.feijao)}<br>• ${this.escolher(this.banco.proteina)}<br>• ${this.escolher(this.banco.acompaAlmoco)}<br>• Suco de ${this.escolher(this.banco.sucos)}`,
+                    lancheT: this.escolher(this.banco.lanches),
+                    jantar: `${this.escolher(this.banco.jantar)}<br>• Suco de ${this.escolher(this.banco.sucos)}`
+                };
+            });
+            plano.push(semana);
+        }
+        localStorage.setItem("plano", JSON.stringify(plano));
+        localStorage.setItem("diaAtual", "0");
+        return plano;
+    },
+
+    obterDados() {
+        let plano = JSON.parse(localStorage.getItem("plano"));
+        if (!plano) plano = this.gerarTudo();
+        let diaIdx = parseInt(localStorage.getItem("diaAtual") || "0");
+        let semIdx = Math.floor(diaIdx / 7);
+        return { semana: plano[semIdx], diaGlobal: diaIdx };
+    },
+
+    mudarAba(aba) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText.toLowerCase().includes(aba)));
+        const container = document.getElementById("conteudo-principal");
+        const { semana, diaGlobal } = this.obterDados();
+        const diasNomes = Object.keys(semana);
+        const diaNome = diasNomes[diaGlobal % 7];
+
+        if (aba === 'dia') {
+            const d = semana[diaNome];
+            container.innerHTML = `
+                <div class="card-hoje">
+                    <h2 style="text-align:center; color:var(--primary)">${diaNome}</h2>
+                    <div class="item-box"><strong>☕ Café:</strong><br>${d.cafe}</div>
+                    <div class="item-box"><strong>🍎 Lanche:</strong><br>${d.lancheM}</div>
+                    <div class="item-box"><strong>🍛 Almoço:</strong><br>${d.almoco}</div>
+                    <div class="item-box"><strong>🍪 Tarde:</strong><br>${d.lancheT}</div>
+                    <div class="item-box"><strong>🌙 Jantar:</strong><br>${d.jantar}</div>
+                    <button onclick="app.proximo()">CONCLUIR DIA</button>
+                </div>`;
+        } else if (aba === 'semana') {
+            let html = `<div class="table-wrapper"><table><tr>`;
+            diasNomes.forEach(d => html += `<th>${d}</th>`);
+            html += `</tr>`;
+            const linhas = [
+                {n:"Café", k:"cafe"}, {n:"Lanche M.", k:"lancheM"}, 
+                {n:"Almoço", k:"almoco"}, {n:"Lanche T.", k:"lancheT"}, {n:"Jantar", k:"jantar"}
+            ];
+            linhas.forEach(row => {
+                html += `<tr>`;
+                diasNomes.forEach(d => html += `<td><span class="ref-label">${row.n}</span>${semana[d][row.k]}</td>`);
+                html += `</tr>`;
+            });
+            container.innerHTML = html + `</table></div>`;
+        } else {
+            container.innerHTML = `<h2>Lista de Compras</h2><p>Proteínas e Grãos da Semana:</p><ul><li>Frango, Carne, Peixe</li><li>Feijão e Arroz</li><li>Frutas diversas</li></ul>`;
+        }
+    },
+
+    proximo() {
+        let dia = parseInt(localStorage.getItem("diaAtual") || "0") + 1;
+        localStorage.setItem("diaAtual", dia);
+        this.mudarAba('dia');
+    }
+};
+app.init = () => app.mudarAba('dia');
+window.onload = app.init;
+</script>
+</body>
+</html>
