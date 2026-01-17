@@ -4,130 +4,325 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Cardápio Inteligente</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4CAF50">
     <style>
         :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: var(--text); }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .semana-dia-box {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: #fff;
+}
+.semana-dia-box h2 {
+    background: var(--primary);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 5px;
+    font-size: 1.1em;
+}
+.detalhe-refeicao {
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #eee;
+}
+.detalhe-refeicao strong {
+    color: #555;
+    font-size: 0.9em;
+}
+.detalhe-refeicao p {
+    margin: 2px 0 0 0;
+    font-size: 0.95em;
+}
         
-        .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #eee; padding: 5px; border-radius: 10px; }
-        .tab { flex: 1; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        /* Navegação */
+        .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; background: #eee; padding: 5px; border-radius: 10px; }
+        .tab { flex: 1; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 14px; }
         .tab.active { background: var(--primary); color: white; }
 
-        .table-wrapper { width: 100%; overflow-x: auto; margin-top: 10px; border: 1px solid #ddd; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { background: var(--primary); color: white; padding: 10px; font-size: 0.9em; }
-        td { padding: 10px; border: 1px solid #eee; vertical-align: top; font-size: 0.85em; }
-        .ref-label { font-weight: bold; color: var(--primary); display: block; margin-bottom: 3px; border-bottom: 1px solid #eee; }
+        /* Blocos de Refeição */
+        .bloco { border-left: 5px solid var(--primary); background: #f9f9f9; padding: 12px; margin-bottom: 12px; border-radius: 5px; }
+        .bloco h3 { margin: 0 0 5px 0; font-size: 0.85em; color: #666; text-transform: uppercase; }
+        .bloco p { margin: 0; font-size: 1.05em; font-weight: 500; }
 
-        .card-hoje { border: 2px solid var(--primary); padding: 15px; border-radius: 10px; background: #fff; }
-        .item-box { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid var(--primary); }
+        /* Tarefas e Compras */
+        .tarefa-alerta { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; }
+        .shopping-list { list-style: none; padding: 0; }
+        .shopping-list li { padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
         
-        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .footer-info { text-align: center; font-size: 0.8em; color: #999; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="nav-tabs">
-        <div class="tab active" onclick="app.mudarAba('dia')">HOJE</div>
-        <div class="tab" onclick="app.mudarAba('semana')">TABELA DA SEMANA</div>
-        <div class="tab" onclick="app.mudarAba('compras')">COMPRAS</div>
+    <div id="app-nav" class="nav-tabs">
+        <div class="tab active" onclick="app.mudarAba('dia')">Hoje</div>
+        <div class="tab" onclick="app.mudarAba('semana')">Semana</div>
+        <div class="tab" onclick="app.mudarAba('compras')">Compras</div>
     </div>
-    <div id="conteudo-principal">Carregando cardápio...</div>
+
+    <div id="conteudo-principal">
+        </div>
+
+    <div class="footer-info" id="status-plano"></div>
 </div>
 
 <script>
 const app = {
-    config: { totalSemanas: 12 },
+    config: { feijaoDias: 4, proteinasRepetirMax: 2, totalSemanas: 12 },
+    
     banco: {
-        cafe: ["Pão francês","Tapioca","Cuscuz","Pão de forma","Bolo"],
-        acompa: ["Manteiga","Ovo mexido","Queijo","Presunto"],
-        bebida: ["Café","Suco","Vitamina","Leite"],
-        proteina: ["Frango grelhado","Carne moída","Bife acebolado","Peixe frito","Ovo cozido"],
-        feijao: ["Feijão preto","Feijão carioca","Feijão fradinho"],
-        acompaAlmoco: ["Arroz branco","Purê","Macarrão","Chuchu cozido","Batata doce"],
-        sucos: ["Maracujá","Laranja","Abacaxi","Limão"],
-        lanches: ["Banana","Maçã","Iogurte","Pera","Biscoito"],
-        jantar: ["Arroz com ovo","Sopa de legumes","Tapioca recheada","Macarrão com frango"]
+        cafe: {
+            bases: ["Pão francês","Pão de forma","Pão caseiro","Tapioca","Cuscuz","Bolo simples","Panqueca","Crepioca","Pão de queijo","Torrada","Aipim cozido","Banana da terra cozida","Iogurte com frutas","Mingau de tapioca","Mingau de milho"],
+            acompanhamentos: ["Manteiga","Requeijão","Queijo mussarela","Ovo mexido","Ovo cozido","Patê de frango","Presunto","Peito de peru"],
+            bebidas: ["Café","Leite com achocolatado","Chá","Vitamina","Suco"]
+        },
+        almoco: {
+            feijoes: ["Feijão carioca","Feijão preto","Feijão fradinho"],
+            proteinas: ["Frango cozido","Frango frito","Frango assado","Carne moída","Carne do sol","Carne de panela","Bife","Almôndega","Peixe frito","Moqueca","Ovo mexido","Panqueca de carne","Salsicha"],
+            acompanhamentos: ["Macarrão","Purê","Batata cozida","Mandioca","Batata frita","Creme de milho","Farofa"],
+            especial: "Feijoada Completa"
+        },
+        jantar: {
+            opcoes: ["Arroz com ovo","Arroz com frango","Macarrão com frango","Sopa","Caldo de carne","Cachorro quente","Pizza","Hambúrguer","Arroz doce"]
+        },
+        lanches: {
+            frutas: ["Banana","Maçã","Uva","Abacaxi","Pera","Manga"],
+            tarde: ["Biscoito","Iogurte","Bolo caseiro","Vitamina"]
+        }
     },
 
+    // --- LÓGICA DE GERAÇÃO ---
     escolher(lista) { return lista[Math.floor(Math.random() * lista.length)]; },
 
-    gerarTudo() {
+    gerarPlanoCompleto() {
         let plano = [];
-        const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         for (let s = 0; s < this.config.totalSemanas; s++) {
-            let semana = {};
-            dias.forEach(d => {
-                semana[d] = {
-                    cafe: `${this.escolher(this.banco.cafe)} com ${this.escolher(this.banco.acompa)}<br>• ${this.escolher(this.banco.bebida)}`,
-                    lancheM: this.escolher(this.banco.lanches),
-                    almoco: `Arroz branco<br>• ${this.escolher(this.banco.feijao)}<br>• ${this.escolher(this.banco.proteina)}<br>• ${this.escolher(this.banco.acompaAlmoco)}<br>• Suco de ${this.escolher(this.banco.sucos)}`,
-                    lancheT: this.escolher(this.banco.lanches),
-                    jantar: `${this.escolher(this.banco.jantar)}<br>• Suco de ${this.escolher(this.banco.sucos)}`
-                };
-            });
-            plano.push(semana);
+            plano.push(this.gerarSemana());
         }
         localStorage.setItem("plano", JSON.stringify(plano));
         localStorage.setItem("diaAtual", "0");
-        return plano;
+        localStorage.setItem("ultimaVisita", new Date().toDateString());
     },
 
-    obterDados() {
-        let plano = JSON.parse(localStorage.getItem("plano"));
-        if (!plano) plano = this.gerarTudo();
-        let diaIdx = parseInt(localStorage.getItem("diaAtual") || "0");
-        let semIdx = Math.floor(diaIdx / 7);
-        return { semana: plano[semIdx], diaGlobal: diaIdx };
+    gerarSemana() {
+        const diasNome = ["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"];
+        let semana = {};
+        let feijaoAtual = this.escolher(this.banco.almoco.feijoes);
+        let protUltima = ""; let protCont = 0;
+
+        diasNome.forEach((dia, index) => {
+            // Troca feijão a cada 4 dias
+            if (index === 4) feijaoAtual = this.escolher(this.banco.almoco.feijoes);
+
+            // Regra de Proteína
+            let prot;
+            do { prot = this.escolher(this.banco.almoco.proteinas); } 
+            while (prot === protUltima && protCont >= this.config.proteinasRepetirMax - 1);
+            
+            protCont = (prot === protUltima) ? protCont + 1 : 0;
+            protUltima = prot;
+
+            // Feijoada no Sábado (50% chance)
+            let almocoFinal = { arroz: "Arroz", feijao: feijaoAtual, proteina: prot, acompanhamento: this.escolher(this.banco.almoco.acompanhamentos) };
+            if (dia === "Sábado" && Math.random() > 0.5) {
+                almocoFinal.feijao = "Caldo de Feijoada";
+                almocoFinal.proteina = this.banco.almoco.especial;
+            }
+
+            semana[dia] = {
+                cafe: { base: this.escolher(this.banco.cafe.bases), acompanhamento: this.escolher(this.banco.cafe.acompanhamentos), bebida: this.escolher(this.banco.cafe.bebidas) },
+                lancheManha: this.escolher(this.banco.lanches.frutas),
+                almoco: almocoFinal,
+                lancheTarde: this.escolher(this.banco.lanches.tarde),
+                jantar: this.escolher(this.banco.jantar.opcoes)
+            };
+        });
+        return semana;
     },
 
-    mudarAba(aba) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText.toLowerCase().includes(aba)));
-        const container = document.getElementById("conteudo-principal");
-        const { semana, diaGlobal } = this.obterDados();
-        const diasNomes = Object.keys(semana);
-        const diaNome = diasNomes[diaGlobal % 7];
+    // --- CONTROLE DE FLUXO ---
+    iniciar() {
+        if (!localStorage.getItem("plano")) this.gerarPlanoCompleto();
+        this.verificarViradaDeDia();
+        this.mudarAba('dia');
+        this.agendarNotificacoes();
+    },
 
-        if (aba === 'dia') {
-            const d = semana[diaNome];
-            container.innerHTML = `
-                <div class="card-hoje">
-                    <h2 style="text-align:center; color:var(--primary)">${diaNome}</h2>
-                    <div class="item-box"><strong>☕ Café:</strong><br>${d.cafe}</div>
-                    <div class="item-box"><strong>🍎 Lanche:</strong><br>${d.lancheM}</div>
-                    <div class="item-box"><strong>🍛 Almoço:</strong><br>${d.almoco}</div>
-                    <div class="item-box"><strong>🍪 Tarde:</strong><br>${d.lancheT}</div>
-                    <div class="item-box"><strong>🌙 Jantar:</strong><br>${d.jantar}</div>
-                    <button onclick="app.proximo()">CONCLUIR DIA</button>
-                </div>`;
-        } else if (aba === 'semana') {
-            let html = `<div class="table-wrapper"><table><tr>`;
-            diasNomes.forEach(d => html += `<th>${d}</th>`);
-            html += `</tr>`;
-            const linhas = [
-                {n:"Café", k:"cafe"}, {n:"Lanche M.", k:"lancheM"}, 
-                {n:"Almoço", k:"almoco"}, {n:"Lanche T.", k:"lancheT"}, {n:"Jantar", k:"jantar"}
-            ];
-            linhas.forEach(row => {
-                html += `<tr>`;
-                diasNomes.forEach(d => html += `<td><span class="ref-label">${row.n}</span>${semana[d][row.k]}</td>`);
-                html += `</tr>`;
-            });
-            container.innerHTML = html + `</table></div>`;
-        } else {
-            container.innerHTML = `<h2>Lista de Compras</h2><p>Proteínas e Grãos da Semana:</p><ul><li>Frango, Carne, Peixe</li><li>Feijão e Arroz</li><li>Frutas diversas</li></ul>`;
+    verificarViradaDeDia() {
+        const hoje = new Date().toDateString();
+        const ultima = localStorage.getItem("ultimaVisita");
+        if (ultima !== hoje) {
+            let dia = parseInt(localStorage.getItem("diaAtual"));
+            dia++;
+            if (dia >= (this.config.totalSemanas * 7)) {
+                this.gerarPlanoCompleto();
+            } else {
+                localStorage.setItem("diaAtual", dia);
+                localStorage.setItem("ultimaVisita", hoje);
+            }
         }
     },
 
-    proximo() {
-        let dia = parseInt(localStorage.getItem("diaAtual") || "0") + 1;
-        localStorage.setItem("diaAtual", dia);
-        this.mudarAba('dia');
+    obterDadosHoje() {
+        const plano = JSON.parse(localStorage.getItem("plano"));
+        const diaIdx = parseInt(localStorage.getItem("diaAtual"));
+        const semIdx = Math.floor(diaIdx / 7);
+        const diaSemanaIdx = diaIdx % 7;
+        const diasChaves = Object.keys(plano[semIdx]);
+        return { dados: plano[semIdx][diasChaves[diaSemanaIdx]], nome: diasChaves[diaSemanaIdx], diaGlobal: diaIdx };
+    },
+
+    // --- INTERFACE ---
+    mudarAba(aba) {
+        const abas = document.querySelectorAll('.tab');
+        abas.forEach(t => t.classList.remove('active'));
+        event?.target?.classList?.add('active') || abas[0].classList.add('active');
+
+        const container = document.getElementById("conteudo-principal");
+        const info = this.obterDadosHoje();
+        
+        if (aba === 'dia') {
+            this.renderDia(container, info);
+        } else if (aba === 'semana') {
+            this.renderSemana(container);
+        } else if (aba === 'compras') {
+            this.renderCompras(container);
+        }
+        
+        document.getElementById("status-plano").innerText = `Dia ${info.diaGlobal + 1} de 84 (12 Semanas)`;
+    },
+
+    renderDia(el, info) {
+        const d = info.dados;
+        let tarefasHtml = "";
+        
+        // Lógica de Tarefas Automáticas
+        if (d.almoco.feijao.includes("Feijão")) tarefasHtml += `<div class="tarefa-alerta">🔔 <strong>Tarefa:</strong> Deixar feijão de molho agora para cozinhar.</div>`;
+        if (d.cafe.base === "Cuscuz") tarefasHtml += `<div class="tarefa-alerta">🥣 <strong>Tarefa:</strong> Hidratar o cuscuz 15min antes.</div>`;
+
+        el.innerHTML = `
+            <h2>${info.nome}-feira</h2>
+            ${tarefasHtml}
+            <div class="bloco"><h3>☕ Café da Manhã</h3><p>${d.cafe.base} com ${d.cafe.acompanhamento} e ${d.cafe.bebida}</p></div>
+            <div class="bloco"><h3>🍎 Lanche</h3><p>${d.lancheManha}</p></div>
+            <div class="bloco"><h3>🍛 Almoço</h3><p>${d.almoco.arroz}, ${d.almoco.feijao}, ${d.almoco.proteina} e ${d.almoco.acompanhamento}</p></div>
+            <div class="bloco"><h3>🍪 Tarde</h3><p>${d.lancheTarde}</p></div>
+            <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jantar}</p></div>
+            <button onclick="app.concluirDiaManual()">Concluir Dia e Avançar</button>
+        `;
+    },
+
+        renderSemana(el) {
+        const plano = JSON.parse(localStorage.getItem("plano"));
+        const diaIdx = parseInt(localStorage.getItem("diaAtual"));
+        const semIdx = Math.floor(diaIdx / 7);
+        const semana = plano[semIdx];
+        
+        let html = `<h1>Detalhes da Semana</h1>`;
+        
+        Object.entries(semana).forEach(([dia, d]) => {
+            html += `
+                <div class="semana-dia-box">
+                    <h2>${dia}-feira</h2>
+                    
+                    <div class="detalhe-refeicao">
+                        <strong>☕ Café da Manhã:</strong>
+                        <p>${d.cafe.base} com ${d.cafe.acompanhamento} (${d.cafe.bebida})</p>
+                    </div>
+
+                    <div class="detalhe-refeicao">
+                        <strong>🍎 Lanche da Manhã:</strong>
+                        <p>${d.lancheManha}</p>
+                    </div>
+
+                    <div class="detalhe-refeicao">
+                        <strong>🍛 Almoço:</strong>
+                        <p>${d.almoco.arroz}, ${d.almoco.feijao}, ${d.almoco.proteina} e ${d.almoco.acompanhamento}</p>
+                    </div>
+
+                    <div class="detalhe-refeicao">
+                        <strong>🍪 Lanche da Tarde:</strong>
+                        <p>${d.lancheTarde}</p>
+                    </div>
+
+                    <div class="detalhe-refeicao">
+                        <strong>🌙 Jantar:</strong>
+                        <p>${d.jantar}</p>
+                    </div>
+                </div>
+            `;
+        });
+        
+        el.innerHTML = html;
+        window.scrollTo(0,0); // Volta para o topo ao abrir
+    },
+
+
+    renderCompras(el) {
+        const plano = JSON.parse(localStorage.getItem("plano"));
+        const semIdx = Math.floor(parseInt(localStorage.getItem("diaAtual")) / 7);
+        const semana = Object.values(plano[semIdx]);
+        const itens = new Set();
+        
+        semana.forEach(d => {
+            itens.add(d.cafe.base); itens.add(d.cafe.acompanhamento);
+            itens.add(d.almoco.feijao); itens.add(d.almoco.proteina);
+            itens.add(d.lancheManha);
+        });
+
+        let html = "<h2>Lista de Compras</h2><ul class='shopping-list'>";
+        Array.from(itens).sort().forEach(it => {
+            html += `<li><input type="checkbox"> ${it}</li>`;
+        });
+        html += "</ul>";
+        el.innerHTML = html;
+    },
+
+    concluirDiaManual() {
+        if(confirm("Deseja avançar para o cardápio de amanhã?")) {
+            localStorage.setItem("ultimaVisita", "forçar_update");
+            this.verificarViradaDeDia();
+            this.mudarAba('dia');
+        }
+    },
+
+    // --- NOTIFICAÇÕES ---
+    agendarNotificacoes() {
+        if (!("Notification" in window)) return;
+        Notification.requestPermission();
+        
+        const info = this.obterDadosHoje().dados;
+        const agendamentos = [
+            { h: 7, m: 0, t: "Café da Manhã", c: info.cafe.base },
+            { h: 12, m: 0, t: "Almoço", c: info.almoco.proteina },
+            { h: 18, m: 30, t: "Jantar", c: info.jantar }
+        ];
+
+        agendamentos.forEach(a => {
+            const agora = new Date();
+            const alvo = new Date();
+            alvo.setHours(a.h, a.m, 0);
+            if (alvo > agora) {
+                setTimeout(() => {
+                    new Notification(a.t, { body: `Hoje teremos: ${a.c}` });
+                }, alvo - agora);
+            }
+        });
     }
 };
-app.init = () => app.mudarAba('dia');
-window.onload = app.init;
+
+// Registro de Service Worker para PWA
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => console.log("SW offline mode ready"));
+}
+
+app.iniciar();
 </script>
 </body>
 </html>
