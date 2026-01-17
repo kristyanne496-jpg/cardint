@@ -3,23 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio Inteligente v14</title>
+    <title>Cardápio Inteligente v15</title>
     <style>
         :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; --accent: #ff9800; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); line-height: 1.4; }
         .container { max-width: 1100px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         
         .nav-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #eee; padding: 5px; border-radius: 10px; }
-        .tab { flex: 1; padding: 12px 5px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; border: none; background: none; }
+        .tab { flex: 1; padding: 12px 5px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; border: none; background: none; transition: 0.3s; }
         .tab.active { background: var(--primary); color: white; }
 
-        .bloco { border-left: 5px solid var(--primary); background: #f9f9f9; padding: 15px; margin-bottom: 12px; border-radius: 5px; position: relative; }
+        .bloco { border-left: 5px solid var(--primary); background: #f9f9f9; padding: 15px; margin-bottom: 12px; border-radius: 5px; }
         .bloco h3 { margin: 0 0 5px 0; font-size: 0.85em; color: #666; text-transform: uppercase; }
         
-        /* Estilo para edição */
-        .editavel { border: 1px dashed #ccc; padding: 10px; background: white; border-radius: 5px; min-height: 40px; outline: none; transition: 0.3s; }
-        .editavel:focus { border-color: var(--primary); background: #f0fff0; }
-        .aviso-edit { font-size: 10px; color: #999; display: block; margin-top: 5px; }
+        .editavel { border: 2px solid #ddd; padding: 15px; background: white; border-radius: 8px; min-height: 150px; outline: none; width: 100%; box-sizing: border-box; font-family: inherit; font-size: 14px; }
+        .editavel:focus { border-color: var(--primary); }
 
         .table-wrapper { width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 950px; }
@@ -27,7 +25,7 @@
         td { padding: 10px; border: 1px solid #eee; font-size: 11px; vertical-align: top; background: white; }
         .hoje-col { background: #e8f5e9 !important; font-weight: bold; border: 2px solid var(--primary) !important; }
         
-        .compras-item { display: inline-block; background: #eee; padding: 5px 10px; margin: 3px; border-radius: 15px; font-size: 12px; }
+        .chip { display: inline-block; background: #e0e0e0; padding: 4px 10px; margin: 2px; border-radius: 15px; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -39,7 +37,7 @@
         <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
         <button class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
     </div>
-    <div id="conteudo-principal">Sincronizando cardápio v14...</div>
+    <div id="conteudo-principal">Sincronizando regras v15...</div>
 </div>
 
 <script>
@@ -54,11 +52,11 @@ const app = {
             { t: "Pão com queijo e presunto", c: "sol", i: "Pão, Queijo, Presunto" },
             { t: "Aipim cozido", c: "sol", i: "Aipim, Sal, Manteiga" },
             { t: "Batata doce cozida", c: "sol", i: "Batata doce" },
-            { t: "Tapioca com coco", c: "sol", i: "Goma de tapioca, Coco ralado" }
+            { t: "Cuscuz com banana", c: "sol", i: "Milho, Banana da terra" }
         ],
         almoco: {
             arroz: ["Arroz Branco", "Arroz com Cenoura"],
-            feijoes: ["Feijão carioca", "Feijão preto", "Feijão fradinho"],
+            feijoes: ["Feijão Carioca", "Feijão Preto", "Feijão Fradinho"],
             proteinas: ["Frango assado", "Carne moída", "Bife no molho", "Peixe frito", "Fígado acebolado", "Almôndegas"],
             acompa: ["Puré de batata", "Salada de maionese", "Couve refogada", "Farofa", "Creme de milho", "Vinagrete"]
         },
@@ -69,51 +67,54 @@ const app = {
             { t: "Cuscuz temperado", c: "sol", i: "Milho, Calabresa, Ovos" },
             { t: "Tapioca de frango", c: "sol", i: "Goma, Frango desfiado" },
             { t: "Hambúrguer", c: "sol", i: "Pão, Carne, Alface" },
-            { t: "Caldo de canoa", c: "liq", i: "Aipim, Carne seca" }
+            { t: "Caldo de Aipim", c: "liq", i: "Aipim, Carne seca" }
         ],
-        bebidasCafe: ["Café puro", "Leite", "Chá de Capim Santo", "Suco de Laranja"],
+        bebidasCafe: ["Café puro", "Leite", "Chá", "Suco"],
         lanchesM: ["Banana", "Maçã", "Uva", "Melancia", "Pera", "Morango", "Manga", "Abacaxi", "Kiwi"],
-        lanchesT: ["Iogurte Natural", "Bolo de Cenoura", "Pão de Queijo", "Pipoca", "Sanduíche Natural", "Vitamina", "Bolacha Maria", "Salada de Frutas"]
+        lanchesT: ["Iogurte", "Bolo Caseiro", "Pão de Queijo", "Pipoca", "Sanduíche Natural", "Vitamina", "Bolachas", "Salada de Frutas"]
     },
 
     shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
+        let arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[array[j]]] = [array[j], array[i]];
+            [arr[i], arr[arr[j]]] = [arr[arr[j]], arr[i]];
         }
-        return array;
+        return arr;
     },
 
     gerarTudo() {
         const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         let plano = {};
         
-        // Embaralha as listas para garantir 0 repetição
-        let dCafe = this.shuffle([...this.banco.cafe]);
-        let dLM = this.shuffle([...this.banco.lanchesM]);
-        let dLT = this.shuffle([...this.banco.lanchesT]);
-        let dJan = this.shuffle([...this.banco.jantar]);
-        let dProt = this.shuffle([...this.banco.almoco.proteinas]);
-        let dAcom = this.shuffle([...this.banco.almoco.acompa]);
+        let dCafe = this.shuffle(this.banco.cafe);
+        let dLM = this.shuffle(this.banco.lanchesM);
+        let dLT = this.shuffle(this.banco.lanchesT);
+        let dJan = this.shuffle(this.banco.jantar);
+        let dProt = this.shuffle(this.banco.almoco.proteinas);
+        let dAcom = this.shuffle(this.banco.almoco.acompa);
+
+        // Lógica do Feijão (Repetir 4 dias)
+        const feijao1 = this.banco.almoco.feijoes[Math.floor(Math.random()*3)];
+        const feijao2 = this.banco.almoco.feijoes.filter(f => f !== feijao1)[Math.floor(Math.random()*2)];
 
         dias.forEach((d, index) => {
-            const itemC = dCafe[index];
-            const itemJ = dJan[index];
+            const itemC = dCafe[index] || dCafe[0];
+            const itemJ = dJan[index] || dJan[0];
             const isFDS = (d === "SÁBADO" || d === "DOMINGO");
 
-            // Bebida única (Lógica reforçada)
             const bebC = itemC.c === "liq" ? "" : "• " + this.banco.bebidasCafe[Math.floor(Math.random()*4)];
+            const feijaoDoDia = (index < 4) ? feijao1 : feijao2;
             
-            // Regra do Fígado
             let pAlmoco = dProt[index % dProt.length];
-            if (isFDS && pAlmoco.includes("Fígado")) pAlmoco = "Frango Grelhado";
+            if (isFDS && pAlmoco.includes("Fígado")) pAlmoco = "Bife de Frango";
 
             plano[d] = {
                 cafe: { txt: `${itemC.t}<br>${bebC}`, ing: itemC.i, liq: itemC.c === "liq" },
                 lancheM: dLM[index],
                 almoco: {
-                    txt: `• ${this.banco.almoco.arroz[index % 2]}<br>• ${this.banco.almoco.feijoes[index % 3]}<br>• ${pAlmoco}<br>• ${dAcom[index % dAcom.length]}<br>• 🥤 Suco`,
-                    ing: `Arroz, Feijão, ${pAlmoco}, Acompanhamento, Frutas para suco`,
+                    txt: `• ${this.banco.almoco.arroz[index % 2]}<br>• ${feijaoDoDia}<br>• ${pAlmoco}<br>• ${dAcom[index % dAcom.length]}<br>• 🥤 Suco`,
+                    ing: `Arroz, ${feijaoDoDia}, ${pAlmoco}, ${dAcom[index % dAcom.length]}`,
                     sob: isFDS ? "🍮 Sobremesa" : ""
                 },
                 lancheT: dLT[index],
@@ -121,7 +122,7 @@ const app = {
             };
         });
 
-        localStorage.setItem("plano_v14", JSON.stringify(plano));
+        localStorage.setItem("plano_v15", JSON.stringify(plano));
         return plano;
     },
 
@@ -132,7 +133,7 @@ const app = {
             btn.classList.add('active');
         }
 
-        let plano = JSON.parse(localStorage.getItem("plano_v14")) || this.gerarTudo();
+        let plano = JSON.parse(localStorage.getItem("plano_v15")) || this.gerarTudo();
         const diasNomes = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         const hojeIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
         const diaNome = diasNomes[hojeIdx];
@@ -140,7 +141,7 @@ const app = {
 
         if (aba === 'dia') {
             container.innerHTML = `
-                <div class="bloco"><h3>☕ Café</h3><p>${d.cafe.txt}</p>${d.cafe.liq ? '<span class="opcional">Dica: Se preferir, troque por Pão com Café</span>' : ''}</div>
+                <div class="bloco"><h3>☕ Café</h3><p>${d.cafe.txt}</p></div>
                 <div class="bloco"><h3>🍎 Lanche M</h3><p>${d.lancheM}</p></div>
                 <div class="bloco"><h3>🍛 Almoço</h3><p>${d.almoco.txt}</p><b>${d.almoco.sob}</b></div>
                 <div class="bloco"><h3>🍪 Lanche T</h3><p>${d.lancheT}</p></div>
@@ -163,26 +164,18 @@ const app = {
             container.innerHTML = html + `</table></div>`;
         }
         else if (aba === 'receitas') {
+            const savedNote = localStorage.getItem("nota_ingredientes") || `HOJE (${diaNome}):\n- ${d.cafe.ing}\n- ${d.almoco.ing}\n- ${d.jantar.ing}\n- Frutas: ${d.lancheM}`;
             container.innerHTML = `
-                <h2>Ingredientes para Hoje (${diaNome})</h2>
-                <div class="bloco"><h3>🛒 O que usar (Clique para editar)</h3>
-                    <div class="editavel" contenteditable="true">
-                        <b>CAFÉ:</b> ${d.cafe.ing}<br><br>
-                        <b>ALMOÇO:</b> ${d.almoco.ing}<br><br>
-                        <b>JANTAR:</b> ${d.jantar.ing}<br><br>
-                        <b>EXTRAS:</b> ${d.lancheM}, ${d.lancheT}
-                    </div>
-                    <small class="aviso-edit">Você pode apagar ou escrever novos itens acima.</small>
-                </div>
+                <h2>Receitas e Preparo (Editável)</h2>
+                <textarea class="editavel" id="blocoNotas" oninput="localStorage.setItem('nota_ingredientes', this.value)">${savedNote}</textarea>
+                <small style="color: #666">As anotações acima ficam guardadas automaticamente.</small>
             `;
         }
         else if (aba === 'compras') {
             let todos = [];
-            diasNomes.forEach(dn => {
-                todos.push(plano[dn].cafe.ing, plano[dn].lancheM, plano[dn].lancheT, plano[dn].jantar.ing);
-            });
+            diasNomes.forEach(dn => todos.push(plano[dn].cafe.ing, plano[dn].lancheM, plano[dn].lancheT, plano[dn].jantar.ing));
             let unique = [...new Set(todos.join(', ').split(', '))].sort();
-            container.innerHTML = `<h2>Compras da Semana</h2><div class="bloco">${unique.map(i => `<span class="compras-item">${i}</span>`).join('')}</div>`;
+            container.innerHTML = `<h2>Lista de Compras</h2><div class="bloco">${unique.map(i => `<span class="chip">${i}</span>`).join('')}</div>`;
         }
     }
 };
