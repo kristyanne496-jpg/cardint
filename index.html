@@ -2,68 +2,109 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <link rel="manifest" href="manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Cardápio Nativo</title>
+    <meta name="theme-color" content="#2e7d32">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048953.png">
+    <title>Cardápio Inteligente v29</title>
     <style>
-        /* [CSS das versões anteriores aqui] */
-        :root { --primary: #2e7d32; --bg: #f0f2f5; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 10px 10px 10px; }
-        /* Adicionando um botão para permitir notificações */
-        .btn-notif { background: #333; color: white; padding: 10px; border-radius: 5px; width: 100%; margin-bottom: 10px; border: none; font-size: 12px; }
+        :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 10px; padding-top: env(safe-area-inset-top); color: var(--text); }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); min-height: 90vh; }
+        .nav-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e0e0e0; padding: 5px; border-radius: 10px; overflow-x: auto; }
+        .tab { flex: 1; padding: 12px 8px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; background: transparent; font-size: 11px; white-space: nowrap; }
+        .tab.active { background: var(--primary); color: white; }
+        .bloco { border-left: 6px solid var(--primary); background: #f8f9fa; padding: 18px; margin-bottom: 15px; border-radius: 8px; }
+        h3 { margin: 0 0 8px 0; font-size: 11px; color: #555; text-transform: uppercase; }
+        .table-wrap { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th, td { border: 1px solid #eee; padding: 10px; text-align: left; vertical-align: top; font-size: 11px; }
+        .hoje-row { background: #e8f5e9 !important; border: 2px solid var(--primary) !important; }
+        .btn-reroll { cursor: pointer; background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 2px 4px; font-size: 12px; float: right; }
+        .edit-box { width: 100%; min-height: 70px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        #painel-alarme { display: none; background: #d32f2f; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <button class="btn-notif" onclick="app.ativarNotificacoes()">🔔 ATIVAR ALERTAS NO CELULAR</button>
-    
-    <div id="painel-alarme" style="display:none;">
+    <div id="painel-alarme">
         <div id="msg-alarme"></div>
-        <button class="btn-ciente" onclick="app.pararAlarme()">CIENTE</button>
+        <button onclick="app.pararAlarme()" style="padding:10px; margin-top:10px; width:100%; font-weight:bold;">CIENTE</button>
     </div>
-
     <div class="nav-tabs">
         <button class="tab active" onclick="app.mudarAba('dia', this)">Hoje</button>
         <button class="tab" onclick="app.mudarAba('semana', this)">Semana</button>
         <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
         <button class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
     </div>
-    <div id="app-view"></div>
+    <div id="app-view">Iniciando...</div>
 </div>
 
 <script>
-// Registro do Service Worker para modo Offline e PWA
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-}
-
 const app = {
-    // [Lógica da Versão 28 aqui...]
-    
-    ativarNotificacoes() {
-        Notification.requestPermission().then(perm => {
-            if(perm === 'granted') {
-                alert('Alertas ativados! O app agora pode te avisar mesmo em segundo plano.');
-            }
-        });
+    base: {
+        cafe: [{t:"Pão com ovo", m:false, s:""}, {t:"Cuscuz com ovo", m:false, s:""}, {t:"Mingau de tapioca", m:true, s:"Pão com Manteiga"}, {t:"Mingau de milho", m:true, s:"Pão com Queijo"}, {t:"Aipim cozido", m:false, s:""}],
+        bebidas: ["Café", "Suco de Laranja", "Chá", "Suco de Abacaxi"],
+        arroz: ["Arroz Branco", "Arroz Integral", "Arroz com Cenoura"],
+        feijao: ["Feijão Carioca", "Feijão Preto", "Feijão Fradinho"],
+        proteinas: ["Frango Grelhado", "Carne Moída", "Frango Assado", "Bife Acebolado"],
+        acompa: ["Puré", "Salada", "Couve", "Farofa", "Creme de milho"],
+        lanches: ["Banana", "Iogurte", "Maçã", "Bolo", "Uva", "Pipoca", "Melancia"]
     },
+    init() {
+        if (!localStorage.getItem("cardapio_v29")) this.gerar();
+        this.mudarAba('dia');
+        setInterval(() => this.checarHorario(), 30000);
+    },
+    gerar() {
+        const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
+        let plano = {};
+        const f1 = this.base.feijao[Math.floor(Math.random()*3)];
+        const f2 = this.base.feijao[Math.floor(Math.random()*3)];
+        dias.forEach((d, i) => {
+            const c = this.base.cafe[i % 5];
+            plano[d] = {
+                cafe: c.t, isMingau: c.m, opcao2: c.s,
+                bebida: c.m ? "" : this.base.bebidas[i % 4],
+                lancheM: this.base.lanches[i % 7],
+                arroz: this.base.arroz[i % 3],
+                feijao: (i < 4) ? f1 : f2,
+                proteina: this.base.proteinas[i % 4],
+                acompa: this.base.acompa[i % 5],
+                lancheT: this.base.lanches[(i + 2) % 7],
+                jantar: "Sopa/Omelete"
+            };
+        });
+        localStorage.setItem("cardapio_v29", JSON.stringify(plano));
+    },
+    mudarAba(aba, btn) {
+        if (btn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+        }
+        const plano = JSON.parse(localStorage.getItem("cardapio_v29"));
+        const painel = document.getElementById("app-view");
+        const hojeNome = ["DOMINGO","SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO"][new Date().getDay()];
+        const d = plano[hojeNome] || plano["SEGUNDA"];
 
-    dispararAlerta(hora, msg) {
-        // Alarme visual/sonoro interno (se o app estiver aberto)
-        this.tocarSom(); 
-        
-        // Notificação do Sistema (se o app estiver em segundo plano)
-        if (Notification.permission === 'granted') {
-            new Notification(`HORÁRIO: ${hora}`, {
-                body: msg,
-                icon: 'https://cdn-icons-png.flaticon.com/512/1048/1048953.png'
+        if(aba === 'dia') {
+            painel.innerHTML = `<div class="bloco"><h3>☕ Café</h3><p>${d.cafe}${d.bebida ? ' + ' + d.bebida : ''}</p></div>
+                                <div class="bloco"><h3>🍛 Almoço</h3><p>${d.arroz}, ${d.feijao}, ${d.proteina}, ${d.acompa}</p></div>
+                                <div class="bloco"><h3>🍎 Lanches</h3><p>Manhã: ${d.lancheM}<br>Tarde: ${d.lancheT}</p></div>`;
+        } else if(aba === 'semana') {
+            let h = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>Almoço</th><th>Lanches</th></tr>';
+            Object.keys(plano).forEach(dia => {
+                const info = plano[dia];
+                h += `<tr><td><b>${dia}</b></td><td>${info.cafe}</td><td>${info.proteina}</td><td>${info.lancheT}</td></tr>`;
             });
+            painel.innerHTML = h + '</table></div>';
+        } else if(aba === 'receitas') {
+            painel.innerHTML = '<h3>Ingredientes Permanentes</h3><textarea class="edit-box" oninput="localStorage.setItem(\'ing_geral\', this.value)">' + (localStorage.getItem('ing_geral') || '') + '</textarea>';
+        } else if(aba === 'compras') {
+            painel.innerHTML = '<h3>Lista de Compras</h3><p>Baseada no plano semanal.</p>';
         }
     }
-    // ... restante das funções (mudarAba, gerar, etc)
 };
 window.onload = () => app.init();
 </script>
