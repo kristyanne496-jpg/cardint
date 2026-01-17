@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio Inteligente v6</title>
+    <title>Cardápio Inteligente v8</title>
     <style>
         :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; --accent: #ff9800; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
@@ -32,7 +32,7 @@
         <div class="tab" onclick="app.mudarAba('semana', this)">Tabela</div>
         <div class="tab" onclick="app.mudarAba('compras', this)">Compras</div>
     </div>
-    <div id="conteudo-principal">Carregando cardápio atualizado...</div>
+    <div id="conteudo-principal">Atualizando base de arroz...</div>
 </div>
 
 <script>
@@ -53,9 +53,10 @@ const app = {
             { txt: "Aipim cozido", cat: "cozido" }, { txt: "Batata doce cozida", cat: "cozido" }
         ],
         almoco: {
+            arroz: ["Arroz Branco", "Arroz com Cenoura"],
             feijoes: ["Feijão carioca", "Feijão preto", "Feijão fradinho"],
             proteinas: ["Frango assado", "Carne moída", "Carne de panela", "Bife no molho", "Peixe frito", "Fígado acebolado", "Frango grelhado", "Frango cozido", "Almôndega"],
-            acompanhamentos: ["Macarrão e Puré de batata", "Batata cozida e Salada de alface", "Couve refogada e Farofa", "Arroz branco e Salada de maionese", "Mandioca frita e Vinagrete", "Creme de milho e Arroz"],
+            acompanhamentos: ["Macarrão e Puré de batata", "Batata cozida e Salada de alface", "Couve refogada e Farofa", "Salada de maionese", "Mandioca frita e Vinagrete", "Creme de milho"],
             sucos: ["Suco de Maracujá", "Suco de Laranja", "Suco de Abacaxi", "Suco de Limão"],
             sobremesas: ["Gelatina", "Pudim", "Mousse de maracujá"]
         },
@@ -67,7 +68,9 @@ const app = {
             { txt: "Tapioca", cat: "solido" }, { txt: "Cuscuz com ovo", cat: "solido" },
             { txt: "Mingau de milho", cat: "liquido" }, { txt: "Macarrão com frango", cat: "solido" },
             { txt: "Cachorro-quente", cat: "solido" }
-        ]
+        ],
+        lanchesM: ["Banana","Maçã","Uva","Melancia", "Mamão", "Pera"],
+        lanchesT: ["Biscoito", "Iogurte", "Bolo caseiro", "Vitamina de frutas", "Pão de queijo"]
     },
 
     escolher(lista) { return lista[Math.floor(Math.random() * lista.length)]; },
@@ -78,37 +81,39 @@ const app = {
         
         for (let s = 0; s < 12; s++) {
             let semana = {};
-            let ultimoJantar = "";
+            let ultJantar = "", ultLancheM = "", ultLancheT = "";
 
             dias.forEach(d => {
+                const isFimDeSemana = (d === "SÁBADO" || d === "DOMINGO");
+
                 // CAFÉ
                 const itemCafe = this.escolher(this.banco.cafe);
                 const bebCafe = itemCafe.cat === "liquido" ? "" : `• ${this.escolher(["Café", "Leite", "Chá", "Suco"])}`;
                 
-                // ALMOÇO DETALHADO
-                const prot = this.escolher(this.banco.almoco.proteinas);
+                // LANCHES (Sem repetição)
+                let lM; do { lM = this.escolher(this.banco.lanchesM); } while (lM === ultLancheM); ultLancheM = lM;
+                let lT; do { lT = this.escolher(this.banco.lanchesT); } while (lT === ultLancheT); ultLancheT = lT;
+
+                // ALMOÇO (Arroz Fixo + Regra Fígado)
+                const baseArroz = this.escolher(this.banco.almoco.arroz);
                 const feijao = this.escolher(this.banco.almoco.feijoes);
+                let prot; do { prot = this.escolher(this.banco.almoco.proteinas); } while (isFimDeSemana && prot.includes("Fígado"));
                 const acompanhamento = this.escolher(this.banco.almoco.acompanhamentos);
                 const sob = (d === "DOMINGO") ? `<span class='sobremesa'>🍮 ${this.escolher(this.banco.almoco.sobremesas)}</span>` : "";
 
-                // JANTAR SEM REPETIÇÃO
-                let itemJan;
-                do {
-                    itemJan = this.escolher(this.banco.jantar);
-                } while (itemJan.txt === ultimoJantar);
-                ultimoJantar = itemJan.txt;
-
+                // JANTAR (Sem repetição)
+                let itemJan; do { itemJan = this.escolher(this.banco.jantar); } while (itemJan.txt === ultJantar); ultJantar = itemJan.txt;
                 const bebJan = itemJan.cat === "liquido" ? "" : `• 🥤 ${this.escolher(this.banco.almoco.sucos)}`;
 
                 semana[d] = {
                     cafe: { txt: `${itemCafe.txt}<br>${bebCafe}`, obs: itemCafe.txt.match(/Tapioca|Mingau|Arroz doce/i) ? "<span class='opcional'>Opção 2: Pão com Café</span>" : "" },
-                    lancheM: this.escolher(["Banana","Maçã","Uva","Melancia"]),
+                    lancheM: lM,
                     almoco: { 
-                        txt: `• ${feijao}<br>• ${prot}<br>• ${acompanhamento}<br>• 🥤 ${this.escolher(this.banco.almoco.sucos)}`, 
+                        txt: `• ${baseArroz}<br>• ${feijao}<br>• ${prot}<br>• ${acompanhamento}<br>• 🥤 ${this.escolher(this.banco.almoco.sucos)}`, 
                         obs: prot.includes("Fígado") ? "<span class='opcional'>Opção 2: Frango Grelhado</span>" : "",
                         sobremesa: sob 
                     },
-                    lancheT: this.escolher(["Biscoito", "Iogurte", "Fruta"]),
+                    lancheT: lT,
                     jantar: { 
                         txt: `${itemJan.txt}<br>${bebJan}`, 
                         obs: itemJan.txt.match(/Tapioca|Mingau|Arroz doce/i) ? "<span class='opcional'>Opção 2: Pão com Ovo</span>" : "" 
@@ -118,12 +123,12 @@ const app = {
             plano.push(semana);
         }
         localStorage.setItem("plano", JSON.stringify(plano));
-        localStorage.setItem("v", "6.0");
+        localStorage.setItem("v", "8.0");
         return plano;
     },
 
     obterDados() {
-        if (localStorage.getItem("v") !== "6.0") this.gerarTudo();
+        if (localStorage.getItem("v") !== "8.0") this.gerarTudo();
         let plano = JSON.parse(localStorage.getItem("plano"));
         const hoje = new Date();
         let diaIdx = hoje.getDay() === 0 ? 6 : hoje.getDay() - 1;
@@ -161,7 +166,7 @@ const app = {
             });
             container.innerHTML = html + `</table></div>`;
         } else {
-            container.innerHTML = `<h2>Compras</h2><p>Organize sua lista baseada na tabela semanal.</p>`;
+            container.innerHTML = `<h2>Compras</h2><p>Verifique os itens frescos na tabela semanal.</p>`;
         }
     },
     concluir() { alert("✅ Dia concluído!"); }
