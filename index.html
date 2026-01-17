@@ -55,7 +55,6 @@ const app = {
             feijoes: ["Feijão carioca","Feijão preto","Feijão fradinho"],
             proteinas: ["Frango cozido","Frango frito","Frango assado","Frango desfiado","Carne moída","Carne do sol","Carne de panela","Bife no molho","Almôndega","Peixe frito","Steak de frango","Iscas de frango","Fígado acebolado","Moqueca","Ovo mexido","Panqueca de carne","Linguiça","Panqueca de frango","Salsicha"],
             acompanhamentos: ["Macarrão","Purê de abóbora","Purê de batata","Purê de aipim","Batata cozida","Mandioca frita","Batata frita","Salada de maionese","Salada de alface com tomate","Salada de couve com tomate","Vinagrete","Couve refogada","Creme de milho","Farofa pronta","Farofa de banana da terra","Farofa de cebola","Farofa de cenoura"],
-            especial: "Feijoada completa",
             sucos: ["Suco de Maracujá", "Suco de Laranja", "Suco de Abacaxi", "Suco de Limão", "Suco de Manga", "Suco de Acerola"],
             sobremesas: ["Gelatina", "Sorvete", "Pudim", "Mousse de maracujá", "Mousse de limão"]
         },
@@ -99,12 +98,17 @@ const app = {
         }
         localStorage.setItem("plano", JSON.stringify(plano));
         localStorage.setItem("semanaIdx", "0");
+        localStorage.setItem("versaoBanco", "2.0"); // Força atualização
         return plano;
     },
 
     obterDados() {
+        // Se a versão do banco for antiga, gera de novo para evitar erro
+        if (localStorage.getItem("versaoBanco") !== "2.0") {
+            this.gerarTudo();
+        }
+
         let plano = JSON.parse(localStorage.getItem("plano"));
-        if (!plano) plano = this.gerarTudo();
         const hoje = new Date();
         let diaIdx = hoje.getDay() === 0 ? 6 : hoje.getDay() - 1;
         const sIdx = parseInt(localStorage.getItem("semanaIdx") || "0");
@@ -123,7 +127,7 @@ const app = {
 
         if (aba === 'dia') {
             container.innerHTML = `
-                <div class="aviso-fluxo">📅 <strong>Organização:</strong> Prepare o lanche da tarde (${d.lancheT}) e o café de amanhã!</div>
+                <div class="aviso-fluxo">📅 <strong>Hoje é ${data.diaNome}:</strong> Organize o lanche da tarde (${d.lancheT}).</div>
                 <div class="bloco"><h3>☕ Café</h3><p>${d.cafe.txt}${d.cafe.obs}</p></div>
                 <div class="bloco"><h3>🍎 Lanche M.</h3><p>${d.lancheM}</p></div>
                 <div class="bloco"><h3>🍛 Almoço</h3><p>${d.almoco.txt}${d.almoco.obs}${d.almoco.sobremesa}</p></div>
@@ -148,23 +152,16 @@ const app = {
             });
             container.innerHTML = html + `</table></div>`;
         } else {
-            container.innerHTML = `<h2>Compras</h2><div class="aviso-fluxo">🍎 <strong>Frutas:</strong> Comprar frutas frescas à tarde!</div><p>Verifique o estoque de proteínas e acompanhamentos.</p>`;
+            container.innerHTML = `<h2>Compras</h2><div class="aviso-fluxo">🍎 <strong>Frutas:</strong> Comprar frutas frescas à tarde!</div><p>Verifique proteínas e grãos.</p>`;
         }
     },
 
     concluir() {
-        alert("✅ Dia concluído!\n\n🔔 NOTIFICAÇÃO: Prepare o Café da Manhã de AMANHÃ agora à noite!");
+        alert("✅ Concluído! Lembre-se de preparar o Café de Amanhã agora à noite!");
     }
 };
 
 window.onload = () => {
-    const hoje = new Date();
-    const ultima = localStorage.getItem("ultimaData");
-    if (ultima && new Date(ultima).getDay() === 0 && hoje.getDay() === 1) {
-        let s = (parseInt(localStorage.getItem("semanaIdx") || "0") + 1) % 12;
-        localStorage.setItem("semanaIdx", s);
-    }
-    localStorage.setItem("ultimaData", hoje.toISOString());
     app.mudarAba('dia');
 };
 </script>
