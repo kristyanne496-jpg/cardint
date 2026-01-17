@@ -3,26 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio Inteligente v22 - Visão Total</title>
+    <title>Cardápio Inteligente v23 - Estrutura Fixa</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
         .container { max-width: 1100px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         .nav-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e0e0e0; padding: 5px; border-radius: 10px; overflow-x: auto; }
-        .tab { flex: 1; padding: 12px 8px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; background: transparent; font-size: 12px; white-space: nowrap; transition: 0.3s; }
+        .tab { flex: 1; padding: 12px 8px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; background: transparent; font-size: 12px; white-space: nowrap; }
         .tab.active { background: var(--primary); color: white; }
-        .bloco { border-left: 6px solid var(--primary); background: #f8f9fa; padding: 18px; margin-bottom: 15px; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.02); }
-        h3 { margin: 0 0 8px 0; font-size: 12px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
-        p { margin: 0; font-size: 16px; line-height: 1.5; }
-        .table-wrap { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #ddd; }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; background: white; }
+        .bloco { border-left: 6px solid var(--primary); background: #f8f9fa; padding: 18px; margin-bottom: 15px; border-radius: 8px; }
+        h3 { margin: 0 0 8px 0; font-size: 12px; color: #555; text-transform: uppercase; }
+        .table-wrap { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
         th, td { border: 1px solid #eee; padding: 12px; text-align: left; vertical-align: top; font-size: 12px; }
-        th { background: #f4f4f4; font-weight: bold; color: #333; }
         .hoje-row { background: #e8f5e9 !important; border: 2px solid var(--primary) !important; }
-        .edit-box { width: 100%; min-height: 70px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; margin-top: 5px; }
-        .item-compra { display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 14px; }
-        .item-compra input { width: 20px; height: 20px; accent-color: var(--primary); }
-        .checked { text-decoration: line-through; color: #999; font-style: italic; }
+        .edit-box { width: 100%; min-height: 70px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .item-compra { display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid #f0f0f0; }
+        .checked { text-decoration: line-through; color: #999; }
         .alerta-mingau { background: #fff3e0; border: 2px dashed #ff9800; padding: 12px; border-radius: 8px; margin-top: 10px; color: #e65100; font-weight: bold; }
     </style>
 </head>
@@ -30,12 +27,12 @@
 
 <div class="container">
     <div class="nav-tabs">
-        <button class="tab active" onclick="app.mudarAba('dia', this)">Cardápio de Hoje</button>
-        <button class="tab" onclick="app.mudarAba('semana', this)">Tabela Semanal</button>
-        <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes por Prato</button>
-        <button class="tab" onclick="app.mudarAba('compras', this)">Lista de Compras (Estoque)</button>
+        <button id="tab-dia" class="tab active" onclick="app.mudarAba('dia', this)">Hoje</button>
+        <button class="tab" onclick="app.mudarAba('semana', this)">Semana</button>
+        <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
+        <button class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
     </div>
-    <div id="app-view">Sincronizando todas as informações...</div>
+    <div id="app-view">Carregando...</div>
 </div>
 
 <script>
@@ -44,26 +41,29 @@ const app = {
         cafe: [
             { t: "Pão com ovo", m: false, s: "" },
             { t: "Cuscuz com ovo", m: false, s: "" },
-            { t: "Mingau de tapioca", m: true, s: "Pão de forma com Manteiga e Café" },
-            { t: "Mingau de milho", m: true, s: "Pão Francês com Queijo e Café" },
-            { t: "Aipim cozido com manteiga", m: false, s: "" }
+            { t: "Mingau de tapioca", m: true, s: "Pão com Manteiga e Café" },
+            { t: "Mingau de milho", m: true, s: "Pão com Queijo e Café" },
+            { t: "Aipim cozido", m: false, s: "" }
         ],
-        bebidas: ["Café puro", "Suco de Laranja", "Chá de Erva-doce", "Suco de Abacaxi", "Suco de Acerola"],
-        frangos: ["Frango Assado", "Frango Grelhado", "Frango Ensopado com Batata", "Strogonoff de Frango", "Frango com Quiabo"],
-        carnes: ["Carne moída com legumes", "Bife acebolado", "Almôndegas ao molho", "Iscas de carne com pimentão"],
-        acompa: ["Puré de batata", "Salada Completa", "Couve refogada", "Farofa de ovos", "Creme de milho"],
-        lanchesM: ["Banana", "Maçã", "Uva", "Pera", "Melancia"],
-        lanchesT: ["Iogurte", "Bolo Caseiro", "Pão de Queijo", "Pipoca", "Sanduíche Natural"],
-        jantares: ["Sopa de Lentilha", "Omelete Recheada", "Canja de Galinha", "Tapioca com Frango", "Caldo Verde", "Sopa de Macarrão", "Cuscuz Nordestino"]
+        bebidas: ["Café puro", "Suco de Laranja", "Chá", "Suco de Abacaxi"],
+        arroz: ["Arroz Branco", "Arroz Integral", "Arroz com Cenoura"],
+        feijao: ["Feijão Carioca", "Feijão Preto", "Feijão Fradinho"],
+        frangos: ["Frango Assado", "Frango Grelhado", "Frango Ensopado", "Strogonoff de Frango"],
+        carnes: ["Carne moída", "Bife acebolado", "Almôndegas", "Iscas de carne"],
+        acompa: ["Puré de batata", "Salada", "Couve refogada", "Farofa", "Creme de milho"],
+        lanchesM: ["Banana", "Maçã", "Uva", "Melancia"],
+        lanchesT: ["Iogurte", "Bolo", "Pão de Queijo", "Pipoca", "Sanduíche"],
+        jantares: ["Sopa de Lentilha", "Omelete", "Canja", "Tapioca", "Caldo Verde"]
     },
 
     init() {
-        if (localStorage.getItem("v_final") !== "22.0") {
-            localStorage.clear();
-            localStorage.setItem("v_final", "22.0");
+        const salvo = localStorage.getItem("plano_v23");
+        if (!salvo) {
             this.gerar();
+        } else {
+            // Verifica se a semana mudou (lógica simplificada para persistência)
+            this.mudarAba('dia');
         }
-        this.mudarAba('dia');
     },
 
     gerar() {
@@ -71,27 +71,28 @@ const app = {
         let plano = {};
         dias.forEach((d, i) => {
             const cafeObj = this.base.cafe[i % 5];
-            const pratoAlmoco = (i % 2 === 0) ? this.base.frangos[i % 5] : this.base.carnes[i % 4];
-            const acompAlmoco = this.base.acompa[i % 5];
-            
+            const protAlm = (i % 2 === 0) ? this.base.frangos[i % 4] : this.base.carnes[i % 4];
             plano[d] = {
                 cafe: cafeObj.t,
                 isMingau: cafeObj.m,
                 opcao2: cafeObj.s,
-                bebida: cafeObj.m ? "Não (Dia de Mingau)" : this.base.bebidas[i % 5],
-                lancheM: this.base.lanchesM[i % 5],
-                almoco_p: pratoAlmoco,
-                almoco_a: acompAlmoco,
+                bebida: cafeObj.m ? "" : this.base.bebidas[i % 4],
+                lancheM: this.base.lanchesM[i % 4],
+                arroz: this.base.arroz[i % 3],
+                feijao: this.base.feijao[i % 3],
+                proteina: protAlm,
+                acompa: this.base.acompa[i % 5],
                 lancheT: this.base.lanchesT[i % 5],
-                jantar: this.base.jantares[i % 7]
+                jantar: this.base.jantares[i % 5]
             };
         });
-        localStorage.setItem("plano_v22", JSON.stringify(plano));
+        localStorage.setItem("plano_v23", JSON.stringify(plano));
+        this.mudarAba('dia');
     },
 
     mudarAba(aba, btn) {
         const painel = document.getElementById("app-view");
-        const plano = JSON.parse(localStorage.getItem("plano_v22"));
+        const plano = JSON.parse(localStorage.getItem("plano_v23"));
         if (btn) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
@@ -104,57 +105,46 @@ const app = {
 
         if (aba === 'dia') {
             painel.innerHTML = `
-                <div class="bloco"><h3>☕ Café da Manhã</h3><p><b>${d.cafe}</b>${d.isMingau ? '' : '<br>• ' + d.bebida}</p>
-                ${d.isMingau ? `<div class="alerta-mingau">⚠️ Segunda Opção (Sólida):<br>${d.opcao2}</div>` : ''}</div>
-                <div class="bloco"><h3>🍎 Lanche da Manhã</h3><p>${d.lancheM}</p></div>
-                <div class="bloco"><h3>🍛 Almoço Completo</h3><p>• Arroz e Feijão<br>• <b>${d.almoco_p}</b><br>• ${d.almoco_a}</p></div>
-                <div class="bloco"><h3>🍪 Lanche da Tarde</h3><p>${d.lancheT}</p></div>
+                <div class="bloco"><h3>☕ Café</h3><p>${d.cafe}${d.bebida ? '<br>• ' + d.bebida : ''}</p>${d.isMingau ? `<div class="alerta-mingau">Opção 2: ${d.opcao2}</div>` : ''}</div>
+                <div class="bloco"><h3>🍎 Lanche M</h3><p>${d.lancheM}</p></div>
+                <div class="bloco"><h3>🍛 Almoço</h3><p>• ${d.arroz}<br>• ${d.feijao}<br>• ${d.proteina}<br>• ${d.acompa}</p></div>
+                <div class="bloco"><h3>🍪 Lanche T</h3><p>${d.lancheT}</p></div>
                 <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jantar}</p></div>
             `;
         } else if (aba === 'semana') {
-            let html = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>L. Manhã</th><th>Almoço</th><th>L. Tarde</th><th>Jantar</th></tr>';
+            let html = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>Almoço</th><th>Jantar</th></tr>';
             diasNomes.forEach((dn, i) => {
                 const dia = plano[dn];
-                html += `<tr class="${i === hojeIdx ? 'hoje-row' : ''}">
-                    <td><b>${dn}</b></td>
-                    <td>${dia.cafe}<br><small>${dia.isMingau ? '[Mingau]' : '('+dia.bebida+')'}</small></td>
-                    <td>${dia.lancheM}</td>
-                    <td>${dia.almoco_p}<br>+ ${dia.almoco_a}</td>
-                    <td>${dia.lancheT}</td>
-                    <td>${dia.jantar}</td>
-                </tr>`;
+                html += `<tr class="${i === hojeIdx ? 'hoje-row' : ''}"><td><b>${dn}</b></td><td>${dia.cafe}</td><td>${dia.proteina} + ${dia.acompa}</td><td>${dia.jantar}</td></tr>`;
             });
             painel.innerHTML = html + '</table></div>';
         } else if (aba === 'receitas') {
-            let html = '<h2>Ingredientes Permanentes</h2>';
-            const lista = [d.cafe, d.almoco_p, d.almoco_a, d.jantar];
-            lista.forEach(item => {
-                const salvo = localStorage.getItem("ing_"+item) || "";
-                html += `<div class="bloco"><h3>${item}</h3>
-                <textarea class="edit-box" oninput="localStorage.setItem('ing_${item}', this.value)" placeholder="Digite os ingredientes...">${salvo}</textarea></div>`;
+            let html = '<h2>Ingredientes</h2>';
+            const itens = [d.cafe, d.proteina, d.acompa, d.jantar];
+            itens.forEach(it => {
+                const salvo = localStorage.getItem("ing_"+it) || "";
+                html += `<div class="bloco"><h3>${it}</h3><textarea class="edit-box" oninput="localStorage.setItem('ing_${it}', this.value)">${salvo}</textarea></div>`;
             });
             painel.innerHTML = html;
         } else if (aba === 'compras') {
-            let itens = new Set(["Arroz", "Feijão", "Açúcar", "Café em pó", "Sal", "Azeite"]);
+            let itens = new Set(["Sal", "Azeite", "Alho"]);
             diasNomes.forEach(dn => {
                 const dia = plano[dn];
-                if(!dia.isMingau) itens.add(dia.bebida);
-                itens.add(dia.lancheM);
-                itens.add(dia.lancheT);
-                [dia.cafe, dia.almoco_p, dia.almoco_a, dia.jantar].forEach(p => {
+                if(dia.bebida) itens.add(dia.bebida);
+                itens.add(dia.lancheM); itens.add(dia.lancheT);
+                [dia.cafe, dia.proteina, dia.acompa, dia.jantar].forEach(p => {
                     const ing = localStorage.getItem("ing_"+p);
                     if(ing) ing.split(',').forEach(i => { if(i.trim()) itens.add(i.trim()); });
                 });
             });
-            let html = '<h2>Lista de Compras (Checklist de Estoque)</h2><div class="bloco">';
+            let html = '<h2>Compras</h2><div class="bloco">';
             Array.from(itens).sort().forEach(it => {
-                html += `<label class="item-compra"><input type="checkbox" onclick="this.parentNode.classList.toggle('checked')"><span>${it}</span></label>`;
+                html += `<label class="item-compra"><input type="checkbox" onclick="this.parentNode.classList.toggle('checked')"> ${it}</label>`;
             });
             painel.innerHTML = html + '</div>';
         }
     }
 };
-
 window.onload = () => app.init();
 </script>
 </body>
