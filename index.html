@@ -242,14 +242,27 @@ jantar: `${this.escolher(this.banco.jantar)}<br>• 🥤 Suco de ${this.escolher
         }
     },
 
-    obterDadosHoje() {
-        const plano = JSON.parse(localStorage.getItem("plano"));
-        const diaIdx = parseInt(localStorage.getItem("diaAtual"));
-        const semIdx = Math.floor(diaIdx / 7);
-        const diaSemanaIdx = diaIdx % 7;
-        const diasChaves = Object.keys(plano[semIdx]);
-        return { dados: plano[semIdx][diasChaves[diaSemanaIdx]], nome: diasChaves[diaSemanaIdx], diaGlobal: diaIdx };
+        obterDados() {
+        let plano = JSON.parse(localStorage.getItem("plano"));
+        if (!plano) plano = this.gerarTudo();
+        
+        // Pega a data real do sistema
+        const dataHoje = new Date();
+        const diaSemanaReal = dataHoje.getDay(); // 0=Dom, 1=Seg, 2=Ter...
+        
+        // Ajusta o índice para Segunda ser o primeiro dia (índice 0)
+        // No JS: Dom=0, Seg=1... No seu plano: Seg=0, Ter=1...
+        let diaIdxCorrigido = diaSemanaReal === 0 ? 6 : diaSemanaReal - 1;
+        
+        // Recupera em qual semana do plano de 12 semanas você está
+        let semanaAtualIdx = parseInt(localStorage.getItem("semanaPlanoIdx") || "0");
+        
+        return { 
+            semana: plano[semanaAtualIdx], 
+            diaIdx: diaIdxCorrigido 
+        };
     },
+,
 
     // --- INTERFACE ---
     mudarAba(aba) {
@@ -392,21 +405,12 @@ container.innerHTML = avisoPreparo + `... resto do seu código ...`;
         }
     }
 
-        proximo() {
-        // Esta é a notificação da noite anterior (Regra que você pediu)
-        const mensagem = "✅ Dia concluído!\n\n🔔 NOTIFICAÇÃO: Prepare os itens do Café da Manhã agora (noite anterior) para adiantar sua manhã!";
-        
-        if(confirm(mensagem)) {
-            let dia = parseInt(localStorage.getItem("diaAtual") || "0") + 1;
-            localStorage.setItem("diaAtual", dia);
-            
-            // Força a tela a voltar para o topo e mostrar o novo dia
-            this.mudarAba('dia');
-            window.scrollTo(0,0);
-        }
+            proximo() {
+        const mensagem = "✅ Tarefas do dia concluídas!\n\n🔔 NOTIFICAÇÃO: Lembre-se de preparar o Café da Manhã de AMANHÃ agora à noite!";
+        alert(mensagem);
+        // Não precisamos mais somar +1 no diaIdx, pois o Date() fará isso amanhã.
     },
 
-    },
 
     // --- NOTIFICAÇÕES ---
     agendarNotificacoes() {
@@ -439,6 +443,22 @@ if ('serviceWorker' in navigator) {
 }
 
 app.iniciar();
+        verificarViradaSemana() {
+        const hoje = new Date();
+        const dataUltimoAcesso = localStorage.getItem("ultimaDataAcesso");
+        
+        if (dataUltimoAcesso) {
+            const ultima = new Date(dataUltimoAcesso);
+            // Se hoje for segunda e o último acesso não foi hoje
+            if (hoje.getDay() === 1 && ultima.toDateString() !== hoje.toDateString()) {
+                let semIdx = parseInt(localStorage.getItem("semanaPlanoIdx") || "0");
+                semIdx = (semIdx + 1) % 12; // Avança a semana (até 12 e volta pro 0)
+                localStorage.setItem("semanaPlanoIdx", semIdx);
+            }
+        }
+        localStorage.setItem("ultimaDataAcesso", hoje.toISOString());
+    },
+
 </script>
 </body>
 </html>
