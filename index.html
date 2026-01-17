@@ -3,58 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2e7d32">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048953.png">
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1ldSBDYXJkw6FwaW8iLAogICJzaG9ydF9uYW1lIjogIkNhcmTDoXBpbyIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAmZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmZmZmZmIiwKICAidGhlbWVfY29sb3IiOiAiIzJlN2QzMiIsCiAgImljb25zIjogW3sKICAgICJzcmMiOiAiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMTA0OC8xMDQ4OTUzLnBuZyIsCiAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgfV0KfQ==">
-
-    <title>Cardápio Inteligente v28</title>
+    <link rel="manifest" href="manifest.json">
+    <title>Cardápio v28 Gold</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 10px 10px 10px; color: var(--text); }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 10px 10px 10px; color: var(--text); }
         .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); min-height: 92vh; }
-        
-        /* Painel de Alarme */
         #painel-alarme { display: none; background: #d32f2f; color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; border: 4px solid #b71c1c; animation: flash 1s infinite; }
         @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
-        
         .nav-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e0e0e0; padding: 5px; border-radius: 12px; overflow-x: auto; }
         .tab { flex: 1; padding: 12px 8px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; background: transparent; font-size: 11px; white-space: nowrap; }
         .tab.active { background: var(--primary); color: white; }
-        
         .bloco { border-left: 6px solid var(--primary); background: #f8f9fa; padding: 18px; margin-bottom: 15px; border-radius: 8px; }
         h3 { margin: 0 0 8px 0; font-size: 11px; color: #555; text-transform: uppercase; }
-        
-        .table-wrap { width: 100%; overflow-x: auto; border-radius: 10px; border: 1px solid #eee; }
+        .table-wrap { width: 100%; overflow-x: auto; border: 1px solid #eee; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 1000px; }
         th, td { border: 1px solid #eee; padding: 10px; text-align: left; vertical-align: top; font-size: 11px; }
         .hoje-row { background: #e8f5e9 !important; border: 2px solid var(--primary) !important; }
-        
         .btn-reroll { cursor: pointer; background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 2px 5px; font-size: 14px; float: right; }
         .btn-config { background: #1a1a1a; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; margin-bottom: 15px; font-weight: bold; font-size: 13px; cursor: pointer; }
-        .edit-box { width: 100%; min-height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        .edit-box { width: 100%; min-height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
         .segunda-opcao { font-size: 10px; color: #e65100; margin-top: 4px; font-style: italic; font-weight: bold; border-top: 1px dotted #ccc; }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <button id="btn-perm" class="btn-config" onclick="app.ativarNotificacoes()">🔔 ATIVAR ALERTAS (CLIQUE AQUI)</button>
-
+    <button id="btn-perm" class="btn-config" onclick="app.ativarNotificacoes()">🔔 ATIVAR ALERTAS E SOM</button>
     <div id="painel-alarme">
         <div id="msg-alarme"></div>
-        <button onclick="app.pararAlarme()" style="padding:12px; width:100%; border-radius:8px; border:none; font-weight:bold; margin-top:10px; cursor:pointer;">ESTOU CIENTE</button>
+        <button onclick="app.pararAlarme()" style="padding:12px; width:100%; border-radius:8px; border:none; font-weight:bold; margin-top:10px;">ESTOU CIENTE</button>
     </div>
-
     <div class="nav-tabs">
-        <button id="tab-dia" class="tab active" onclick="app.mudarAba('dia', this)">Janela do Dia</button>
-        <button class="tab" onclick="app.mudarAba('semana', this)">Tabela Semana</button>
+        <button class="tab active" onclick="app.mudarAba('dia', this)">Hoje</button>
+        <button class="tab" onclick="app.mudarAba('semana', this)">Semana</button>
         <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
-        <button class="tab" onclick="app.mudarAba('compras', this)">Lista Compras</button>
+        <button class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
     </div>
-    <div id="app-view">A carregar...</div>
+    <div id="app-view">Iniciando...</div>
 </div>
 
 <script>
@@ -73,30 +62,17 @@ const app = {
         bebidas: ["Café puro", "Suco de Laranja", "Chá", "Suco de Abacaxi"],
         arroz: ["Arroz Branco", "Arroz Integral", "Arroz com Cenoura"],
         feijao: ["Feijão Carioca", "Feijão Preto", "Feijão Fradinho"],
-        frangos: ["Frango Assado", "Frango Grelhado", "Frango Ensopado", "Strogonoff"],
-        carnes: ["Carne moída", "Bife acebolado", "Almôndegas", "Iscas de carne"],
-        acompa: ["Puré", "Salada", "Couve", "Farofa", "Creme de milho"],
-        lanches: ["Banana", "Maçã", "Uva", "Melancia", "Iogurte", "Bolo", "Pão de Queijo"],
-        jantares: ["Sopa", "Omelete", "Canja", "Tapioca", "Caldo Verde"]
+        frangos: ["Frango Assado", "Frango Grelhado", "Frango Ensopado"],
+        carnes: ["Carne moída", "Bife acebolado", "Almôndegas"],
+        acompa: ["Puré", "Salada", "Couve", "Farofa"],
+        lanches: ["Banana", "Maçã", "Uva", "Iogurte", "Bolo", "Pão de Queijo"],
+        jantares: ["Sopa", "Omelete", "Canja", "Tapioca"]
     },
-
     init() {
-        try {
-            if (!localStorage.getItem("db_v28_final")) this.gerar();
-            this.mudarAba('dia');
-            setInterval(() => this.verificarRelogio(), 15000);
-        } catch(e) {
-            localStorage.clear();
-            location.reload();
-        }
+        if (!localStorage.getItem("db_v28_final")) this.gerar();
+        this.mudarAba('dia');
+        setInterval(() => this.verificarRelogio(), 15000);
     },
-
-    ativarNotificacoes() {
-        Notification.requestPermission().then(p => { if(p === 'granted') alert('Notificações prontas!'); });
-        if(!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        document.getElementById('btn-perm').style.display = 'none';
-    },
-
     gerar() {
         const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         let p = {};
@@ -110,31 +86,31 @@ const app = {
                 lM: this.base.lanches[i % 7],
                 arr: this.base.arroz[i % 3],
                 fei: (i < 4) ? f1 : f2,
-                pro: (i % 2 === 0) ? this.base.frangos[i % 4] : this.base.carnes[i % 4],
-                aco: this.base.acompa[i % 5],
+                pro: (i % 2 === 0) ? this.base.frangos[i % 3] : this.base.carnes[i % 3],
+                aco: this.base.acompa[i % 4],
                 lT: this.base.lanches[(i+3) % 7],
-                jan: this.base.jantares[i % 5]
+                jan: this.base.jantares[i % 4]
             };
         });
         localStorage.setItem("db_v28_final", JSON.stringify(p));
     },
-
+    ativarNotificacoes() {
+        Notification.requestPermission();
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        document.getElementById('btn-perm').style.display = 'none';
+    },
     verificarRelogio() {
-        const agora = new Date();
-        const hm = agora.getHours().toString().padStart(2, '0') + ":" + agora.getMinutes().toString().padStart(2, '0');
-        if (["07:30", "13:00", "19:00", "21:00"].includes(hm) && this.ultimoAlarme !== hm) {
-            this.ultimoAlarme = hm;
-            this.dispararAlerta(hm);
+        const h = new Date().getHours().toString().padStart(2,'0') + ":" + new Date().getMinutes().toString().padStart(2,'0');
+        if (["07:30", "13:00", "19:00", "21:00"].includes(h) && this.ultimoAlarme !== h) {
+            this.ultimoAlarme = h;
+            this.dispararAlerta(h);
         }
     },
-
     dispararAlerta(h) {
-        document.getElementById("msg-alarme").innerHTML = `<h2>🔔 ALERTA ${h}</h2><p>Verifique as tarefas do cardápio para este horário.</p>`;
+        document.getElementById("msg-alarme").innerHTML = `<h2>🔔 AVISO ${h}</h2><p>Verifique o cardápio!</p>`;
         document.getElementById("painel-alarme").style.display = "block";
-        if (Notification.permission === 'granted') { new Notification(`Aviso ${h}`, { body: "Hora de olhar o cardápio!" }); }
         this.tocarSom();
     },
-
     tocarSom() {
         if(!this.audioCtx) this.audioCtx = new AudioContext();
         const osc = this.audioCtx.createOscillator();
@@ -147,56 +123,45 @@ const app = {
         }, 800);
         this.oscillator = osc;
     },
-
     pararAlarme() {
         document.getElementById("painel-alarme").style.display = "none";
         if(this.oscillator) { this.oscillator.stop(); clearInterval(this.loopSom); }
     },
-
     reroll(dia, campo) {
-        let plano = JSON.parse(localStorage.getItem("db_v28_final"));
-        const rand = (arr) => arr[Math.floor(Math.random()*arr.length)];
-        if(campo === 'cafe') {
-            const c = rand(this.base.cafe);
-            plano[dia].cafe = c.t; plano[dia].isM = c.m; plano[dia].s = c.s;
-            plano[dia].beb = c.m ? "" : rand(this.base.bebidas);
-        } else if(campo === 'almoco') {
-            plano[dia].pro = rand([...this.base.frangos, ...this.base.carnes]);
-            plano[dia].aco = rand(this.base.acompa);
-        } else if(campo === 'jantar') plano[dia].jan = rand(this.base.jantares);
-        else if(campo === 'lancheM') plano[dia].lM = rand(this.base.lanches);
-        else if(campo === 'lancheT') plano[dia].lT = rand(this.base.lanches);
-        localStorage.setItem("db_v28_final", JSON.stringify(plano));
+        let p = JSON.parse(localStorage.getItem("db_v28_final"));
+        const rand = (a) => a[Math.floor(Math.random()*a.length)];
+        if(campo==='cafe'){ 
+            const c = rand(this.base.cafe); p[dia].cafe=c.t; p[dia].isM=c.m; p[dia].s=c.s; p[dia].beb=c.m?"":rand(this.base.bebidas);
+        } else if(campo==='almoco'){ p[dia].pro=rand([...this.base.frangos, ...this.base.carnes]); p[dia].aco=rand(this.base.acompa); }
+        localStorage.setItem("db_v28_final", JSON.stringify(p));
         this.mudarAba('semana');
     },
-
     mudarAba(aba, btn) {
-        if (btn) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-        }
+        if (btn) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); }
         const p = JSON.parse(localStorage.getItem("db_v28_final"));
         const painel = document.getElementById("app-view");
         const hojeIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
         const nomes = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         const d = p[nomes[hojeIdx]];
-
         if (aba === 'dia') {
-            painel.innerHTML = `
-                <div class="bloco"><h3>☕ Café</h3><p><b>${d.cafe}</b>${d.beb ? '<br>• '+d.beb : ''}</p>${d.isM ? `<div class="segunda-opcao">Opção sólida: ${d.s}</div>` : ''}</div>
-                <div class="bloco"><h3>🍎 Lanche M</h3><p>${d.lM}</p></div>
-                <div class="bloco"><h3>🍛 Almoço</h3><p>• ${d.arr}<br>• ${d.fei}<br>• ${d.pro}<br>• ${d.aco}</p></div>
-                <div class="bloco"><h3>🍪 Lanche T</h3><p>${d.lT}</p></div>
-                <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jan}</p></div>
-            `;
+            painel.innerHTML = `<div class="bloco"><h3>☕ Café</h3><p><b>${d.cafe}</b>${d.beb ? '<br>• '+d.beb : ''}</p>${d.isM ? `<div class="segunda-opcao">${d.s}</div>` : ''}</div>
+                                <div class="bloco"><h3>🍛 Almoço</h3><p>${d.arr}, ${d.fei}, ${d.pro}, ${d.aco}</p></div>
+                                <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jan}</p></div>`;
         } else if (aba === 'semana') {
-            let h = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>L. Manhã</th><th>Almoço</th><th>L. Tarde</th><th>Jantar</th></tr>';
+            let h = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>Almoço</th><th>Jantar</th></tr>';
             nomes.forEach((n, i) => {
                 const dia = p[n];
-                h += `<tr class="${i===hojeIdx?'hoje-row':''}"><td><b>${n}</b></td>
-                    <td>${dia.cafe}<button class="btn-reroll" onclick="app.reroll('${n}','cafe')">🎲</button>${dia.isM?`<div class="segunda-opcao">${dia.s}</div>`:''}</td>
-                    <td>${dia.lM}<button class="btn-reroll" onclick="app.reroll('${n}','lancheM')">🎲</button></td>
-                    <td>• ${dia.arr}<br>• ${dia.fei}<br>• ${dia.pro} + ${dia.aco}<button class="btn-reroll" onclick="app.reroll('${n}','almoco')">🎲</button></td>
-                    <td>${dia.lT}<button class="btn-reroll" onclick="app.reroll('${n}','lancheT')">🎲</button></td>
-                    <td>${dia.jan}<button class="btn-reroll
-    
+                h += `<tr class="${i===hojeIdx?'hoje-row':''}"><td><b>${n}</b></td><td>${dia.cafe}<button class="btn-reroll" onclick="app.reroll('${n}','cafe')">🎲</button></td><td>${dia.pro}</td><td>${dia.jan}</td></tr>`;
+            });
+            painel.innerHTML = h + '</table></div>';
+        } else if (aba === 'receitas') {
+            painel.innerHTML = '<h3>Ingredientes Permanentes</h3><textarea class="edit-box" oninput="localStorage.setItem(\'ing\', this.value)">'+(localStorage.getItem('ing')||'')+'</textarea>';
+        } else if (aba === 'compras') {
+            painel.innerHTML = '<h3>Lista de Compras</h3><p>Baseada nos lanches e ingredientes.</p>';
+        }
+    }
+};
+window.onload = () => app.init();
+</script>
+</body>
+</html>
