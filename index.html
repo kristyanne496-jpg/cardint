@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio Inteligente v18 - Checklist</title>
+    <title>Cardápio Inteligente v18.1</title>
     <style>
         :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
@@ -34,7 +34,7 @@
         <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
         <button class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
     </div>
-    <div id="conteudo-principal">Carregando v18...</div>
+    <div id="conteudo-principal">A carregar o seu cardápio...</div>
 </div>
 
 <script>
@@ -69,10 +69,11 @@ const app = {
 
     salvarIng(nome, texto) {
         localStorage.setItem("ing_" + nome, texto);
-        const id = "msg-" + nome.replace(/\s/g, '');
-        if(document.getElementById(id)) {
-            document.getElementById(id).style.display = "inline";
-            setTimeout(() => { document.getElementById(id).style.display='none'; }, 2000);
+        const idClean = nome.replace(/\s/g, '');
+        const msgEl = document.getElementById("msg-" + idClean);
+        if(msgEl) {
+            msgEl.style.display = "inline";
+            setTimeout(() => { msgEl.style.display='none'; }, 2000);
         }
     },
 
@@ -119,7 +120,7 @@ const app = {
                 jantar_v: `${itemJ.t}${itemJ.c === "liq" ? "" : "<br>• Suco"}`
             };
         });
-        localStorage.setItem("plano_v18", JSON.stringify(plano));
+        localStorage.setItem("plano_v18_1", JSON.stringify(plano));
         return plano;
     },
 
@@ -130,11 +131,10 @@ const app = {
             btn.classList.add('active');
         }
 
-        let plano = JSON.parse(localStorage.getItem("plano_v18")) || this.gerarTudo();
+        let plano = JSON.parse(localStorage.getItem("plano_v18_1")) || this.gerarTudo();
         const diasNomes = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         const hojeIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
-        const diaNome = diasNomes[hojeIdx];
-        const d = plano[diaNome];
+        const d = plano[diasNomes[hojeIdx]];
 
         if (aba === 'dia') {
             container.innerHTML = `
@@ -150,49 +150,5 @@ const app = {
             html += `</tr>`;
             const linhas = [["Café", "cafe_v"], ["L. Manhã", "lancheM"], ["Almoço", "almoco_v"], ["L. Tarde", "lancheT"], ["Jantar", "jantar_v"]];
             linhas.forEach(l => {
-                html += `<tr><td><b>${l[0]}</b></td>`;
-                diasNomes.forEach((dn, i) => html += `<td class="${i===hojeIdx?'hoje-col':''}">${plano[dn][l[1]]}</td>`);
-                html += `</tr>`;
-            });
-            container.innerHTML = html + `</table></div>`;
-        } else if (aba === 'receitas') {
-            const pratos = [{t: "Café", n: d.cafe_n}, {t: "Almoço", n: d.almoco_n}, {t: "Jantar", n: d.jantar_n}];
-            let html = `<h2>Ingredientes Permanentes</h2>`;
-            pratos.forEach(p => {
-                html += `<div class="bloco"><h3>${p.t}: ${p.n}</h3>
-                <textarea class="edit-box" oninput="app.salvarIng('${p.n}', this.value)">${this.getIng(p.n, "Edite aqui os ingredientes...")}</textarea>
-                <span class="save-msg" id="msg-${p.n.replace(/\s/g, '')}">✓ Salvo para o futuro!</span></div>`;
-            });
-            container.innerHTML = html;
-        } else if (aba === 'compras') {
-            let itens = new Set();
-            diasNomes.forEach(dn => {
-                const dia = plano[dn];
-                // Puxa ingredientes salvos
-                this.getIng(dia.cafe_n, "").split(',').forEach(i => if(i.trim()) itens.add(i.trim()));
-                this.getIng(dia.almoco_n, "").split(',').forEach(i => if(i.trim()) itens.add(i.trim()));
-                this.getIng(dia.jantar_n, "").split(',').forEach(i => if(i.trim()) itens.add(i.trim()));
-                // Puxa Frutas e Bebidas
-                itens.add(dia.lancheM);
-                itens.add(dia.bebida);
-                itens.add("Arroz");
-                itens.add("Feijão");
-            });
-
-            let html = `<h2>Lista de Compras ( Checklist )</h2><div class="bloco">`;
-            Array.from(itens).sort().forEach((item, idx) => {
-                html += `
-                <div class="checklist-item">
-                    <input type="checkbox" id="item-${idx}" onclick="this.nextSibling.classList.toggle('checked')">
-                    <label for="item-${idx}">${item}</label>
-                </div>`;
-            });
-            container.innerHTML = html + `</div><small>Marque o que já tem em estoque.</small>`;
-        }
-    }
-};
-
-window.onload = () => app.mudarAba('dia');
-</script>
-</body>
-</html>
+                html += `<tr><td><b>${l[0]}
+    
