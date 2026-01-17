@@ -262,6 +262,70 @@ limparEstoque() {
         this.renderCompras(document.getElementById("conteudo"));
     }
 },
+agendarNotificacoes() {
+    if (!("Notification" in window)) return;
+
+    Notification.requestPermission().then(permission => {
+        if (permission !== "granted") return;
+
+        const agora = new Date();
+
+        // Função para agendar uma notificação
+        const agendar = (hora, min, texto) => {
+            const alvo = new Date();
+            alvo.setHours(hora, min, 0, 0);
+            if (alvo < agora) alvo.setDate(alvo.getDate() + 1); // próxima ocorrência
+
+            const tempo = alvo - agora;
+            setTimeout(() => {
+                new Notification("Meu Cardápio Inteligente", { body: texto });
+                agendar(hora, min, texto); // reagenda para amanhã
+            }, tempo);
+        };
+
+        const semana = this.obterSemana();
+        const hojeIdx = new Date().getDay();
+        const nomes = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+        const hoje = semana[nomes[hojeIdx]];
+
+        // 13:00 → frutas das próximas refeições
+        let frutas = [];
+        frutas.push(hoje.lancheManha);
+        frutas.push(hoje.lancheTarde);
+
+        if (hojeIdx < 6) {
+            const amanha = semana[nomes[hojeIdx + 1]];
+            frutas.push(amanha.lancheManha);
+        }
+        frutas = frutas.filter(i => this.banco.lanches.frutas.includes(i));
+        const textoFrutas = frutas.length ? `Não esqueça de comprar: ${frutas.join(", ")}` : "Sem frutas adicionais hoje";
+
+        agendar(13, 0, textoFrutas);
+
+        // 19:00 → itens de padaria do jantar ou café da manhã do dia seguinte
+        let padaria = [];
+
+        // itens do jantar de hoje
+        const jantarHoje = hoje.jantar.toLowerCase();
+        if (jantarHoje.includes("pão") || jantarHoje.includes("torrada") || jantarHoje.includes("bolo") || jantarHoje.includes("panqueca") || jantarHoje.includes("tapioca") || jantarHoje.includes("cuscuz")) {
+            padaria.push(hoje.jantar);
+        }
+
+        // café da manhã do dia seguinte
+        if (hojeIdx < 6) {
+            const amanha = semana[nomes[hojeIdx + 1]];
+            const cafe = amanha.cafe.base.toLowerCase();
+            if (cafe.includes("pão") || cafe.includes("torrada") || cafe.includes("bolo") || cafe.includes("panqueca") || cafe.includes("tapioca") || cafe.includes("cuscuz")) {
+                padaria.push(amanha.cafe.base);
+            }
+        }
+
+        const textoPadaria = padaria.length ? `Comprar itens de padaria: ${padaria.join(", ")}` : "Nenhum item de padaria hoje";
+
+        agendar(19, 0, textoPadaria);
+    });
+app.agendarNotificacoes();
+},
 
 app.mudarAba("dia", document.querySelector(".tab"));
 </script>
