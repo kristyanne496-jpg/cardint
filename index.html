@@ -30,73 +30,25 @@ button { width:100%; padding:12px; background:var(--primary); color:#fff; border
 <script>
 const app = {
 
-    // ================= BANCO DE DADOS COMPLETO =================
+    // ================= BANCO DE DADOS =================
     banco: {
-
         cafe: {
-            bases: [
-                "Pão francês","Pão de forma","Pão caseiro","Tapioca","Cuscuz",
-                "Bolo simples caseiro","Panqueca","Crepioca","Mingau de aveia",
-                "Mingau de milho","Pão de queijo","Torrada","Aipim cozido",
-                "Banana da terra cozida","Batata doce cozida","Iogurte com frutas",
-                "Mingau de tapioca"
-            ],
-            acompanhamentos: [
-                "Manteiga ou Margarina","Requeijão","Cream cheese","Catupiry",
-                "Queijo mussarela","Ovo mexido","Ovo cozido",
-                "Patê de frango caseiro","Patê de atum caseiro",
-                "Presunto","Mortadela","Peito de peru"
-            ],
-            bebidas: [
-                "Café","Leite com achocolatado","Chá","Vitamina",
-                "Chá gelado","Suco de uva integral","Suco"
-            ]
+            bases: ["Pão francês","Pão de forma","Pão caseiro","Tapioca","Cuscuz","Bolo simples caseiro","Panqueca","Crepioca","Mingau de aveia","Mingau de milho","Pão de queijo","Torrada","Aipim cozido","Banana da terra cozida","Batata doce cozida","Iogurte com frutas","Mingau de tapioca"],
+            acompanhamentos: ["Manteiga ou Margarina","Requeijão","Cream cheese","Catupiry","Queijo mussarela","Ovo mexido","Ovo cozido","Patê de frango caseiro","Patê de atum caseiro","Presunto","Mortadela","Peito de peru"],
+            bebidas: ["Café","Leite com achocolatado","Chá","Vitamina","Chá gelado","Suco de uva integral","Suco"]
         },
-
         almoco: {
             feijoes: ["Feijão carioca","Feijão preto","Feijão fradinho"],
-            proteinas: [
-                "Frango cozido","Frango frito","Frango assado","Frango desfiado",
-                "Carne moída","Carne do sol","Carne de panela","Bife no molho",
-                "Almôndega","Peixe frito","Steak de frango","Iscas de frango",
-                "Fígado acebolado","Moqueca","Ovo mexido","Panqueca de carne",
-                "Linguiça","Panqueca de frango","Salsicha"
-            ],
-            acompanhamentos: [
-                "Macarrão","Purê de abóbora","Purê de batata","Purê de aipim",
-                "Batata cozida","Mandioca frita","Batata frita",
-                "Salada de maionese","Salada de alface com tomate",
-                "Salada de couve com tomate","Vinagrete","Couve refogada",
-                "Creme de milho","Farofa pronta","Farofa de banana da terra",
-                "Farofa de cebola","Farofa de cenoura"
-            ],
+            proteinas: ["Frango cozido","Frango frito","Frango assado","Frango desfiado","Carne moída","Carne do sol","Carne de panela","Bife no molho","Almôndega","Peixe frito","Steak de frango","Iscas de frango","Fígado acebolado","Moqueca","Ovo mexido","Panqueca de carne","Linguiça","Panqueca de frango","Salsicha"],
+            acompanhamentos: ["Macarrão","Purê de abóbora","Purê de batata","Purê de aipim","Batata cozida","Mandioca frita","Batata frita","Salada de maionese","Salada de alface com tomate","Salada de couve com tomate","Vinagrete","Couve refogada","Creme de milho","Farofa pronta","Farofa de banana da terra","Farofa de cebola","Farofa de cenoura"],
             especial: "Feijoada completa"
         },
-
         jantar: {
-            opcoes: [
-                "Arroz com ovo","Arroz com frango","Macarrão com frango",
-                "Sopa","Caldo de carne","Caldo de frango","Caldo de calabresa",
-                "Mini salgados","Cachorro-quente","Pizza","Hambúrguer",
-                "Arroz doce","Pão francês","Pão de forma","Pão caseiro",
-                "Tapioca","Cuscuz com ovo","Cuscuz com banana da terra",
-                "Cuscuz com carne do sol","Farofa de cuscuz","Bolo simples",
-                "Panqueca de frango","Panqueca de carne","Crepioca",
-                "Mingau de aveia","Mingau de milho","Pão de queijo","Torrada",
-                "Aipim cozido","Banana da terra cozida","Batata doce cozida"
-            ]
+            opcoes: ["Arroz com ovo","Arroz com frango","Macarrão com frango","Sopa","Caldo de carne","Caldo de frango","Caldo de calabresa","Mini salgados","Cachorro-quente","Pizza","Hambúrguer","Arroz doce","Pão francês","Pão de forma","Pão caseiro","Tapioca","Cuscuz com ovo","Cuscuz com banana da terra","Cuscuz com carne do sol","Farofa de cuscuz","Bolo simples","Panqueca de frango","Panqueca de carne","Crepioca","Mingau de aveia","Mingau de milho","Pão de queijo","Torrada","Aipim cozido","Banana da terra cozida","Batata doce cozida"]
         },
-
         lanches: {
-            frutas: [
-                "Banana","Maçã","Uva","Abacaxi","Pera","Manga","Melancia",
-                "Maçã verde","Tangerina","Morango","Laranja","Ameixa"
-            ],
-            tarde: [
-                "Biscoito","Iogurte com frutas","Iogurte com granola",
-                "Bolo caseiro","Vitamina de açaí","Vitamina de frutas",
-                "Sonho de padaria","Salada de frutas"
-            ]
+            frutas: ["Banana","Maçã","Uva","Abacaxi","Pera","Manga","Melancia","Maçã verde","Tangerina","Morango","Laranja","Ameixa"],
+            tarde: ["Biscoito","Iogurte com frutas","Iogurte com granola","Bolo caseiro","Vitamina de açaí","Vitamina de frutas","Sonho de padaria","Salada de frutas"]
         }
     },
 
@@ -136,23 +88,19 @@ const app = {
     },
 
     mudarAba(aba, el) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-
-    const c = document.getElementById("conteudo");
-
-    if (aba === "dia") this.renderDia(c);
-    else if (aba === "semana") this.renderSemana(c);
-    else this.renderCompras(c);
-},
-
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        const c = document.getElementById("conteudo");
+        if (aba === "dia") this.renderDia(c);
+        else if (aba === "semana") this.renderSemana(c);
+        else this.renderCompras(c);
+    },
 
     renderDia(el) {
         const semana = this.obterSemana();
         const hoje = new Date().getDay();
         const nomes = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
         const d = semana[nomes[hoje]];
-
         el.innerHTML = `
             <h2>${nomes[hoje]}</h2>
             <div class="bloco">☕ ${d.cafe.base} com ${d.cafe.acomp} e ${d.cafe.bebida}</div>
@@ -180,155 +128,12 @@ const app = {
                 </div>`;
         }
         el.innerHTML = html;
-    }
-};
-gerarListaCompras() {
-    const semana = this.obterSemana();
-    const itens = new Set();
+    },
 
-    Object.values(semana).forEach(dia => {
-
-        // Café
-        itens.add(dia.cafe.base);
-        itens.add(dia.cafe.acomp);
-        itens.add(dia.cafe.bebida);
-
-        // Lanches
-        itens.add(dia.lancheManha);
-        itens.add(dia.lancheTarde);
-
-        // Almoço
-        itens.add(dia.almoco.feijao);
-        itens.add(dia.almoco.proteina);
-        itens.add(dia.almoco.acomp);
-
-        // Jantar
-        itens.add(dia.jantar);
-    });
-
-    return Array.from(itens).sort();
-},
-renderCompras(el) {
-    const lista = this.gerarListaCompras();
-    const estoque = JSON.parse(localStorage.getItem("estoque") || "[]");
-
-    let html = `<h2>🛒 Lista de Compras</h2>
-        <p style="font-size:0.85em;color:#666">
-            Marque o que você já tem em casa
-        </p>
-        <button onclick="app.limparEstoque()" style="background:#f44336">
-            Limpar seleção
-        </button>
-        <ul style="list-style:none;padding:0">`;
-
-    lista.forEach(item => {
-        const marcado = estoque.includes(item);
-        html += `
-            <li style="
-                display:flex;
-                justify-content:space-between;
-                padding:10px;
-                margin-bottom:6px;
-                background:${marcado ? '#e8f5e9' : '#f9f9f9'};
-                border-radius:8px;
-            ">
-                <span style="${marcado ? 'text-decoration:line-through;opacity:.6' : ''}">
-                    ${item}
-                </span>
-                <input type="checkbox"
-                    ${marcado ? 'checked' : ''}
-                    onchange="app.toggleEstoque('${item}')">
-            </li>`;
-    });
-
-    el.innerHTML = html + "</ul>";
-},
-toggleEstoque(item) {
-    let estoque = JSON.parse(localStorage.getItem("estoque") || "[]");
-
-    if (estoque.includes(item)) {
-        estoque = estoque.filter(i => i !== item);
-    } else {
-        estoque.push(item);
-    }
-
-    localStorage.setItem("estoque", JSON.stringify(estoque));
-    this.renderCompras(document.getElementById("conteudo"));
-},
-
-limparEstoque() {
-    if (confirm("Deseja desmarcar todos os itens?")) {
-        localStorage.setItem("estoque", "[]");
-        this.renderCompras(document.getElementById("conteudo"));
-    }
-},
-agendarNotificacoes() {
-    if (!("Notification" in window)) return;
-
-    Notification.requestPermission().then(permission => {
-        if (permission !== "granted") return;
-
-        const agora = new Date();
-
-        // Função para agendar uma notificação
-        const agendar = (hora, min, texto) => {
-            const alvo = new Date();
-            alvo.setHours(hora, min, 0, 0);
-            if (alvo < agora) alvo.setDate(alvo.getDate() + 1); // próxima ocorrência
-
-            const tempo = alvo - agora;
-            setTimeout(() => {
-                new Notification("Meu Cardápio Inteligente", { body: texto });
-                agendar(hora, min, texto); // reagenda para amanhã
-            }, tempo);
-        };
-
+    gerarListaCompras() {
         const semana = this.obterSemana();
-        const hojeIdx = new Date().getDay();
-        const nomes = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
-        const hoje = semana[nomes[hojeIdx]];
-
-        // 13:00 → frutas das próximas refeições
-        let frutas = [];
-        frutas.push(hoje.lancheManha);
-        frutas.push(hoje.lancheTarde);
-
-        if (hojeIdx < 6) {
-            const amanha = semana[nomes[hojeIdx + 1]];
-            frutas.push(amanha.lancheManha);
-        }
-        frutas = frutas.filter(i => this.banco.lanches.frutas.includes(i));
-        const textoFrutas = frutas.length ? `Não esqueça de comprar: ${frutas.join(", ")}` : "Sem frutas adicionais hoje";
-
-        agendar(13, 0, textoFrutas);
-
-        // 19:00 → itens de padaria do jantar ou café da manhã do dia seguinte
-        let padaria = [];
-
-        // itens do jantar de hoje
-        const jantarHoje = hoje.jantar.toLowerCase();
-        if (jantarHoje.includes("pão") || jantarHoje.includes("torrada") || jantarHoje.includes("bolo") || jantarHoje.includes("panqueca") || jantarHoje.includes("tapioca") || jantarHoje.includes("cuscuz")) {
-            padaria.push(hoje.jantar);
-        }
-
-        // café da manhã do dia seguinte
-        if (hojeIdx < 6) {
-            const amanha = semana[nomes[hojeIdx + 1]];
-            const cafe = amanha.cafe.base.toLowerCase();
-            if (cafe.includes("pão") || cafe.includes("torrada") || cafe.includes("bolo") || cafe.includes("panqueca") || cafe.includes("tapioca") || cafe.includes("cuscuz")) {
-                padaria.push(amanha.cafe.base);
-            }
-        }
-
-        const textoPadaria = padaria.length ? `Comprar itens de padaria: ${padaria.join(", ")}` : "Nenhum item de padaria hoje";
-
-        agendar(19, 0, textoPadaria);
-    });
-app.agendarNotificacoes();
-},
-
-app.mudarAba("dia", document.querySelector(".tab"));
-</script>
-</body>
-</html>
-
+        const itens = new Set();
+        Object.values(semana).forEach(dia => {
+            itens.add(dia.cafe.base);
+            itens.add(dia.cafe.acomp);
+            itens.add(dia.cafe.bebid
