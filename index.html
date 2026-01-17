@@ -375,12 +375,20 @@ container.innerHTML = avisoPreparo + `... resto do seu código ...`;
         }
     }
 
-    concluirDiaManual() {
-        if(confirm("Deseja avançar para o cardápio de amanhã?")) {
-            localStorage.setItem("ultimaVisita", "forçar_update");
-            this.verificarViradaDeDia();
+        proximo() {
+        // Esta é a notificação da noite anterior (Regra que você pediu)
+        const mensagem = "✅ Dia concluído!\n\n🔔 NOTIFICAÇÃO: Prepare os itens do Café da Manhã agora (noite anterior) para adiantar sua manhã!";
+        
+        if(confirm(mensagem)) {
+            let dia = parseInt(localStorage.getItem("diaAtual") || "0") + 1;
+            localStorage.setItem("diaAtual", dia);
+            
+            // Força a tela a voltar para o topo e mostrar o novo dia
             this.mudarAba('dia');
+            window.scrollTo(0,0);
         }
+    },
+
     },
 
     // --- NOTIFICAÇÕES ---
