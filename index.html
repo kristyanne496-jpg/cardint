@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Cardápio Inteligente</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <style>
+        /* Ajuste para as bebidas não embolarem o texto */
+td br {
+    content: "";
+    margin-bottom: 4px;
+    display: block;
+}
+        
+        .opcional { color: #d32f2f; font-size: 0.85em; display: block; margin-top: 5px; border-top: 1px dotted #ccc; padding-top: 2px; }
+.sobremesa { color: #ff9800; font-weight: bold; display: block; margin-top: 8px; font-size: 0.9em; }
+.aviso-fluxo { background: #e3f2fd; border: 1px solid #2196f3; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 0.85em; color: #0d47a1; }
+        
+        :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: var(--text); }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .shopping-list { list-style: none; padding: 0; }
+.shopping-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f9f9f9;
+    margin-bottom: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+.shopping-item.checked {
+    background: #e8f5e9;
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+.shopping-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+.btn-limpar {
+    background: #f44336;
+    font-size: 12px;
+    padding: 8px;
+    margin-bottom: 15px;
+}
+        .semana-dia-box {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: #fff;
+}
+.semana-dia-box h2 {
+    background: var(--primary);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 5px;
+    font-size: 1.1em;
+}
+.detalhe-refeicao {
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #eee;
+}
+.detalhe-refeicao strong {
+    color: #555;
+    font-size: 0.9em;
+}
+.detalhe-refeicao p {
+    margin: 2px 0 0 0;
+    font-size: 0.95em;
+}
+        
+        /* Navegação */
+        .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; background: #eee; padding: 5px; border-radius: 10px; }
+        .tab { flex: 1; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 14px; }
+        .tab.active { background: var(--primary); color: white; }
+
+        /* Blocos de Refeição */
+        .bloco { border-left: 5px solid var(--primary); background: #f9f9f9; padding: 12px; margin-bottom: 12px; border-radius: 5px; }
+        .bloco h3 { margin: 0 0 5px 0; font-size: 0.85em; color: #666; text-transform: uppercase; }
+        .bloco p { margin: 0; font-size: 1.05em; font-weight: 500; }
+
+        /* Tarefas e Compras */
+        .tarefa-alerta { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; }
+        .shopping-list { list-style: none; padding: 0; }
+        .shopping-list li { padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
+        
+        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .footer-info { text-align: center; font-size: 0.8em; color: #999; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="app-nav" class="nav-tabs">
+        <div class="tab active" onclick="app.mudarAba('dia')">Hoje</div>
+        <div class="tab" onclick="app.mudarAba('semana')">Semana</div>
+        <div class="tab" onclick="app.mudarAba('compras')">Compras</div>
+    </div>
+
+    <div id="conteudo-principal">
+        </div>
+
+    <div class="footer-info" id="status-plano"></div>
+</div>
+
+<script>
+const app = {
+    config: { feijaoDias: 4, proteinasRepetirMax: 2, totalSemanas: 12 },
+    
+    banco: {
+        cafe: {
+            bases: ["Pão francês","Pão de forma","Pão caseiro","Tapioca","Cuscuz","Bolo simples","Panqueca","Crepioca","Pão de queijo","Torrada","Aipim cozido","Banana da terra cozida","Iogurte com frutas","Mingau de tapioca","Mingau de milho"],
+            acompanhamentos: ["Manteiga","Requeijão","Queijo mussarela","Ovo mexido","Ovo cozido","Patê de frango","Presunto","Peito de peru"],
+            bebidas: ["Café","Leite com achocolatado","Chá","Vitamina","Suco"]
+                // Substitua as listas antigas por estas:
+bebidaPadaria: ["Café preto", "Leite com achocolatado", "Chá"], 
+sucos: ["Maracujá", "Laranja", "Abacaxi", "Limão", "Cupuaçu", "Cacau", "Graviola", "Melancia"],
+sobremesas: ["Gelatina", "Sorvete", "Pudim", "Mousse de maracujá", "Mousse de limão"],
+    
+        },
+        almoco: {
+            feijoes: ["Feijão carioca","Feijão preto","Feijão fradinho"],
+            proteinas: ["Frango cozido","Frango frito","Frango assado","Carne moída","Carne do sol","Carne de panela","Bife","Almôndega","Peixe frito","Moqueca","Ovo mexido","Panqueca de carne","Salsicha"],
+            acompanhamentos: ["Macarrão","Purê","Batata cozida","Mandioca","Batata frita","Creme de milho","Farofa"],
+            especial: "Feijoada Completa"
+        },
+        jantar: {
+            opcoes: ["Arroz com ovo","Arroz com frango","Macarrão com frango","Sopa","Caldo de carne","Cachorro quente","Pizza","Hambúrguer","Arroz doce"]
+        },
+        lanches: {
+            frutas: ["Banana","Maçã","Uva","Abacaxi","Pera","Manga"],
+            tarde: ["Biscoito","Iogurte","Bolo caseiro","Vitamina"]
+        }
+    },
+
+    // --- LÓGICA DE GERAÇÃO ---
+    escolher(lista) { return lista[Math.floor(Math.random() * lista.length)]; },
+
+    gerarPlanoCompleto() {
+        let plano = [];
+        for (let s = 0; s < this.config.totalSemanas; s++) {
+            plano.push(this.gerarSemana());
+        }
+        localStorage.setItem("plano", JSON.stringify(plano));
+        localStorage.setItem("diaAtual", "0");
+        localStorage.setItem("ultimaVisita", new Date().toDateString());
+    },
+
+    gerarSemana() {
+        const diasNome = ["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"];
+        let semana = {};
+        let feijaoAtual = this.escolher(this.banco.almoco.feijoes);
+        let protUltima = ""; let protCont = 0;
+
+        diasNome.forEach((dia, index) => {
+            // Localize onde o 'semana[d]' é montado e use esta lógica:
+const baseCafe = this.escolher(this.banco.cafe);
+const isMingau = baseCafe.toLowerCase().includes("mingau");
+const prot = this.escolher(this.banco.proteina);
+
+semana[d] = {
+    cafe: {
+        txt: isMingau ? baseCafe : `${baseCafe} com ${this.escolher(this.banco.acompa)}<br>• ${this.escolher(this.banco.bebidaPadaria)}`,
+        obs: isMingau ? "<span class='opcional'>Opção 2: Pão com Café</span>" : ""
+    },
+    lancheM: this.escolher(this.banco.lanches),
+    almoco: {
+        txt: `Arroz e Feijão<br>• ${prot}<br>• ${this.escolher(this.banco.acompaAlmoco)}<br>• Suco de ${this.escolher(this.banco.sucos)}`,
+        obs: prot.includes("Fígado") ? "<span class='opcional'>Opção 2: Frango Grelhado</span>" : "",
+        sobremesa: (d === "SÁBADO" || d === "DOMINGO") ? `<span class='sobremesa'>🍮 ${this.escolher(this.banco.sobremesas)}</span>` : ""
+    },
+    lancheT: `${this.escolher(["Biscoito", "Bolo", "Torradas"])} com ${this.escolher(["Chá", "Leite com achocolatado"])}`,
+    jantar: `${this.escolher(this.banco.jantar)}<br>• Suco de ${this.escolher(this.banco.sucos)}`
+};
+            // No bloco do Almoço:
+almoco: {
+    txt: `Arroz e Feijão<br>• ${prot}<br>• ${this.escolher(this.banco.acompaAlmoco)}<br>• 🥤 Suco de ${this.escolher(this.banco.sucos)}`,
+    obs: prot.includes("Fígado") ? "<span class='opcional'>Opção 2: Frango Grelhado</span>" : "",
+    sobremesa: (d === "SÁBADO" || d === "DOMINGO") ? `<span class='sobremesa'>🍮 ${this.escolher(this.banco.sobremesas)}</span>` : ""
+},
+
+// No bloco do Jantar:
+jantar: `${this.escolher(this.banco.jantar)}<br>• 🥤 Suco de ${this.escolher(this.banco.sucos)}`
+    
+    
+            // Troca feijão a cada 4 dias
+            if (index === 4) feijaoAtual = this.escolher(this.banco.almoco.feijoes);
+
+            // Regra de Proteína
+            let prot;
+            do { prot = this.escolher(this.banco.almoco.proteinas); } 
+            while (prot === protUltima && protCont >= this.config.proteinasRepetirMax - 1);
+            
+            protCont = (prot === protUltima) ? protCont + 1 : 0;
+            protUltima = prot;
+
+            // Feijoada no Sábado (50% chance)
+            let almocoFinal = { arroz: "Arroz", feijao: feijaoAtual, proteina: prot, acompanhamento: this.escolher(this.banco.almoco.acompanhamentos) };
+            if (dia === "Sábado" && Math.random() > 0.5) {
+                almocoFinal.feijao = "Caldo de Feijoada";
+                almocoFinal.proteina = this.banco.almoco.especial;
+            }
+
+            semana[dia] = {
+                cafe: { base: this.escolher(this.banco.cafe.bases), acompanhamento: this.escolher(this.banco.cafe.acompanhamentos), bebida: this.escolher(this.banco.cafe.bebidas) },
+                lancheManha: this.escolher(this.banco.lanches.frutas),
+                almoco: almocoFinal,
+                lancheTarde: this.escolher(this.banco.lanches.tarde),
+                jantar: this.escolher(this.banco.jantar.opcoes)
+            };
+        });
+        return semana;
+    },
+
+    // --- CONTROLE DE FLUXO ---
+    iniciar() {
+        if (!localStorage.getItem("plano")) this.gerarPlanoCompleto();
+        this.verificarViradaDeDia();
+        this.mudarAba('dia');
+        this.agendarNotificacoes();
+    },
+
+    verificarViradaDeDia() {
+        const hoje = new Date().toDateString();
+        const ultima = localStorage.getItem("ultimaVisita");
+        if (ultima !== hoje) {
+            let dia = parseInt(localStorage.getItem("diaAtual"));
+            dia++;
+            if (dia >= (this.config.totalSemanas * 7)) {
+                this.gerarPlanoCompleto();
+            } else {
+                localStorage.setItem("diaAtual", dia);
+                localStorage.setItem("ultimaVisita", hoje);
+            }
+        }
+    },
+
+        obterDados() {
+        let plano = JSON.parse(localStorage.getItem("plano"));
+        if (!plano) plano = this.gerarTudo();
+        
+        // Pega a data real do sistema
+        const dataHoje = new Date();
+        const diaSemanaReal = dataHoje.getDay(); // 0=Dom, 1=Seg, 2=Ter...
+        
+        // Ajusta o índice para Segunda ser o primeiro dia (índice 0)
+        // No JS: Dom=0, Seg=1... No seu plano: Seg=0, Ter=1...
+        let diaIdxCorrigido = diaSemanaReal === 0 ? 6 : diaSemanaReal - 1;
+        
+        // Recupera em qual semana do plano de 12 semanas você está
+        let semanaAtualIdx = parseInt(localStorage.getItem("semanaPlanoIdx") || "0");
+        
+        return { 
+            semana: plano[semanaAtualIdx], 
+            diaIdx: diaIdxCorrigido 
+        };
+    },
+,
+
+    // --- INTERFACE ---
+    mudarAba(aba) {
+        const abas = document.querySelectorAll('.tab');
+        abas.forEach(t => t.classList.remove('active'));
+        event?.target?.classList?.add('active') || abas[0].classList.add('active');
+
+        const container = document.getElementById("conteudo-principal");
+        const info = this.obterDadosHoje();
+        
+        if (aba === 'dia') {
+            // Adicione esta linha logo antes do container.innerHTML:
+const avisoPreparo = `
+    <div class="aviso-fluxo">
+        📢 <strong>Organização:</strong> Prepare agora o lanche da tarde (${d.lancheT}) 
+        e verifique os ingredientes do jantar.
+    </div>`;
+
+// E no innerHTML, chame a variável:
+container.innerHTML = avisoPreparo + `... resto do seu código ...`;
+
+
+    renderDia(el, info) {
+        const d = info.dados;
+        let tarefasHtml = "";
+        
+        // Lógica de Tarefas Automáticas
+        if (d.almoco.feijao.includes("Feijão")) tarefasHtml += `<div class="tarefa-alerta">🔔 <strong>Tarefa:</strong> Deixar feijão de molho agora para cozinhar.</div>`;
+        if (d.cafe.base === "Cuscuz") tarefasHtml += `<div class="tarefa-alerta">🥣 <strong>Tarefa:</strong> Hidratar o cuscuz 15min antes.</div>`;
+
+        el.innerHTML = `
+            <h2>${info.nome}-feira</h2>
+            ${tarefasHtml}
+            <div class="bloco"><h3>☕ Café da Manhã</h3><p>${d.cafe.base} com ${d.cafe.acompanhamento} e ${d.cafe.bebida}</p></div>
+            <div class="bloco"><h3>🍎 Lanche</h3><p>${d.lancheManha}</p></div>
+            <div class="bloco"><h3>🍛 Almoço</h3><p>${d.almoco.arroz}, ${d.almoco.feijao}, ${d.almoco.proteina} e ${d.almoco.acompanhamento}</p></div>
+            <div class="bloco"><h3>🍪 Tarde</h3><p>${d.lancheTarde}</p></div>
+            <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jantar}</p></div>
+            <button onclick="app.concluirDiaManual()">Concluir Dia e Avançar</button>
+        `;
+    },
+
+        renderSemana(el) {
+        const plano = JSON.parse(localStorage.getItem("plano"));
+        const diaIdx = parseInt(localStorage.getItem("diaAtual"));
+        const semIdx = Math.floor(diaIdx / 7);
+        const semana = plano[semIdx];
+        
+        let html = `<h1>Detalhes da Semana</h1>`;
+        
+        Object.entries(semana).forEach(([dia, d]) => {
+            html += `
+                <div class="semana-dia-box">
+                    <h2>${dia}-feira</h2>
+                    
+                    <div class="detalhe-refeicao">
+                        <strong>☕ Café da Manhã:</strong>
+                        <p>${d.cafe.base} com ${d.cafe.acompanhamento} (${d.cafe.bebida})</p>
+                    </div>
+
+                    <div class="detalhe-refeicao">
+                        <strong>🍎 Lanche da Manhã:</strong>
+                        <p>${d.lancheManha}</p>
+                    </div>
+
+                    <div class="detalhe-refeicao">
+                        <strong>🍛 Almoço:</strong>
+                        <p>${d.almoco.arroz}, ${d.almoco.feijao}, ${d.almoco.proteina} e ${d.almoco.acompanhamento}</p>
+                    </div>
+
+                    <div class="detalhe-refeicao">
+                        <strong>🍪 Lanche da Tarde:</strong>
+                        <p>${d.lancheTarde}</p>
+                    </div>
+
+                    <div class="detalhe-refeicao">
+                        <strong>🌙 Jantar:</strong>
+                        <p>${d.jantar}</p>
+                    </div>
+                </div>
+            `;
+        });
+        
+        el.innerHTML = html;
+        window.scrollTo(0,0); // Volta para o topo ao abrir
+    },
+
+
+        renderCompras(el) {
+        const { semana } = this.obterDados();
+        const itensSet = new Set();
+        
+        // Coleta todos os itens base da semana
+        Object.values(semana).forEach(d => {
+            // Extrai as palavras principais para a lista
+            const extrator = (str) => str.split('<br>')[0].split(' com ')[0].replace('• ', '');
+            itensSet.add(extrator(d.cafe));
+            itensSet.add(d.lancheM);
+            itensSet.add("Arroz branco");
+            itensSet.add(extrator(d.almoco.split('<br>• ')[1])); // Feijão
+            itensSet.add(extrator(d.almoco.split('<br>• ')[2])); // Proteína
+        });
+
+        const estoque = JSON.parse(localStorage.getItem("estoque") || "[]");
+        
+        let html = `<h2>🛒 Estoque e Compras</h2>
+                    <p style="font-size:0.8em; color:#666">Marque o que você já tem em casa:</p>
+                    <button class="btn-limpar" onclick="app.limparEstoque()">Limpar Seleção</button>
+                    <ul class="shopping-list">`;
+
+        Array.from(itensSet).sort().forEach(item => {
+            const isChecked = estoque.includes(item) ? "checked" : "";
+            const isCheckedAttr = estoque.includes(item) ? "checked" : "";
+            
+            html += `
+                <li class="shopping-item ${isChecked}">
+                    <span>${item}</span>
+                    <input type="checkbox" ${isCheckedAttr} onchange="app.toggleEstoque('${item}')">
+                </li>`;
+        });
+
+        el.innerHTML = html + `</ul>`;
+    },
+
+    toggleEstoque(item) {
+        let estoque = JSON.parse(localStorage.getItem("estoque") || "[]");
+        if (estoque.includes(item)) {
+            estoque = estoque.filter(i => i !== item);
+        } else {
+            estoque.push(item);
+        }
+        localStorage.setItem("estoque", JSON.stringify(estoque));
+        this.mudarAba('compras'); // Recarrega a tela para aplicar o estilo visual
+    },
+
+    limparEstoque() {
+        if(confirm("Deseja desmarcar todos os itens?")) {
+            localStorage.setItem("estoque", "[]");
+            this.mudarAba('compras');
+        }
+    }
+
+            proximo() {
+        const mensagem = "✅ Tarefas do dia concluídas!\n\n🔔 NOTIFICAÇÃO: Lembre-se de preparar o Café da Manhã de AMANHÃ agora à noite!";
+        alert(mensagem);
+        // Não precisamos mais somar +1 no diaIdx, pois o Date() fará isso amanhã.
+    },
+
+
+    // --- NOTIFICAÇÕES ---
+    agendarNotificacoes() {
+        if (!("Notification" in window)) return;
+        Notification.requestPermission();
+        
+        const info = this.obterDadosHoje().dados;
+        const agendamentos = [
+            { h: 7, m: 0, t: "Café da Manhã", c: info.cafe.base },
+            { h: 12, m: 0, t: "Almoço", c: info.almoco.proteina },
+            { h: 18, m: 30, t: "Jantar", c: info.jantar }
+        ];
+
+        agendamentos.forEach(a => {
+            const agora = new Date();
+            const alvo = new Date();
+            alvo.setHours(a.h, a.m, 0);
+            if (alvo > agora) {
+                setTimeout(() => {
+                    new Notification(a.t, { body: `Hoje teremos: ${a.c}` });
+                }, alvo - agora);
+            }
+        });
+    }
+};
+
+// Registro de Service Worker para PWA
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => console.log("SW offline mode ready"));
+}
+
+app.iniciar();
+        verificarViradaSemana() {
+        const hoje = new Date();
+        const dataUltimoAcesso = localStorage.getItem("ultimaDataAcesso");
+        
+        if (dataUltimoAcesso) {
+            const ultima = new Date(dataUltimoAcesso);
+            // Se hoje for segunda e o último acesso não foi hoje
+            if (hoje.getDay() === 1 && ultima.toDateString() !== hoje.toDateString()) {
+                let semIdx = parseInt(localStorage.getItem("semanaPlanoIdx") || "0");
+                semIdx = (semIdx + 1) % 12; // Avança a semana (até 12 e volta pro 0)
+                localStorage.setItem("semanaPlanoIdx", semIdx);
+            }
+        }
+        localStorage.setItem("ultimaDataAcesso", hoje.toISOString());
+    },
+
+</script>
+</body>
+</html>
