@@ -8,22 +8,27 @@
     <meta name="theme-color" content="#2e7d32">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048953.png">
     <link rel="manifest" href="manifest.json">
-    <title>Cardápio v28 Gold</title>
+    <title>Cardápio Gold v28</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 10px 10px 10px; color: var(--text); }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 10px 10px 10px; color: var(--text); }
         .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); min-height: 92vh; }
+        
         #painel-alarme { display: none; background: #d32f2f; color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; border: 4px solid #b71c1c; animation: flash 1s infinite; }
         @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        
         .nav-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e0e0e0; padding: 5px; border-radius: 12px; overflow-x: auto; }
         .tab { flex: 1; padding: 12px 8px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; background: transparent; font-size: 11px; white-space: nowrap; }
         .tab.active { background: var(--primary); color: white; }
+        
         .bloco { border-left: 6px solid var(--primary); background: #f8f9fa; padding: 18px; margin-bottom: 15px; border-radius: 8px; }
         h3 { margin: 0 0 8px 0; font-size: 11px; color: #555; text-transform: uppercase; }
+        
         .table-wrap { width: 100%; overflow-x: auto; border: 1px solid #eee; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 1000px; }
         th, td { border: 1px solid #eee; padding: 10px; text-align: left; vertical-align: top; font-size: 11px; }
         .hoje-row { background: #e8f5e9 !important; border: 2px solid var(--primary) !important; }
+        
         .btn-reroll { cursor: pointer; background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 2px 5px; font-size: 14px; float: right; }
         .btn-config { background: #1a1a1a; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; margin-bottom: 15px; font-weight: bold; font-size: 13px; cursor: pointer; }
         .edit-box { width: 100%; min-height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
@@ -31,23 +36,28 @@
     </style>
 </head>
 <body>
+
 <div class="container">
     <button id="btn-perm" class="btn-config" onclick="app.ativarNotificacoes()">🔔 ATIVAR ALERTAS E SOM</button>
+
     <div id="painel-alarme">
         <div id="msg-alarme"></div>
-        <button onclick="app.pararAlarme()" style="padding:12px; width:100%; border-radius:8px; border:none; font-weight:bold; margin-top:10px;">ESTOU CIENTE</button>
+        <button onclick="app.pararAlarme()" style="padding:12px; width:100%; border-radius:8px; border:none; font-weight:bold; margin-top:10px; cursor:pointer;">ESTOU CIENTE</button>
     </div>
+
     <div class="nav-tabs">
-        <button class="tab active" onclick="app.mudarAba('dia', this)">Hoje</button>
-        <button class="tab" onclick="app.mudarAba('semana', this)">Semana</button>
+        <button class="tab active" onclick="app.mudarAba('dia', this)">Janela do Dia</button>
+        <button class="tab" onclick="app.mudarAba('semana', this)">Tabela Semana</button>
         <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
-        <button class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
+        <button class="tab" onclick="app.mudarAba('compras', this)">Lista Compras</button>
     </div>
-    <div id="app-view">Iniciando...</div>
+    <div id="app-view">Sincronizando...</div>
 </div>
 
 <script>
-if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+if ('serviceWorker' in navigator) { 
+    navigator.serviceWorker.register('sw.js').then(() => console.log("SW Ativo"));
+}
 
 const app = {
     audioCtx: null, oscillator: null, loopSom: null, ultimoAlarme: null,
@@ -68,11 +78,16 @@ const app = {
         lanches: ["Banana", "Maçã", "Uva", "Iogurte", "Bolo", "Pão de Queijo"],
         jantares: ["Sopa", "Omelete", "Canja", "Tapioca"]
     },
+
     init() {
-        if (!localStorage.getItem("db_v28_final")) this.gerar();
+        // Trava para não resetar se os dados já existirem
+        if (!localStorage.getItem("db_v28_final")) {
+            this.gerar();
+        }
         this.mudarAba('dia');
         setInterval(() => this.verificarRelogio(), 15000);
     },
+
     gerar() {
         const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         let p = {};
@@ -94,23 +109,28 @@ const app = {
         });
         localStorage.setItem("db_v28_final", JSON.stringify(p));
     },
+
     ativarNotificacoes() {
         Notification.requestPermission();
-        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if(!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         document.getElementById('btn-perm').style.display = 'none';
     },
+
     verificarRelogio() {
-        const h = new Date().getHours().toString().padStart(2,'0') + ":" + new Date().getMinutes().toString().padStart(2,'0');
+        const agora = new Date();
+        const h = agora.getHours().toString().padStart(2,'0') + ":" + agora.getMinutes().toString().padStart(2,'0');
         if (["07:30", "13:00", "19:00", "21:00"].includes(h) && this.ultimoAlarme !== h) {
             this.ultimoAlarme = h;
             this.dispararAlerta(h);
         }
     },
+
     dispararAlerta(h) {
-        document.getElementById("msg-alarme").innerHTML = `<h2>🔔 AVISO ${h}</h2><p>Verifique o cardápio!</p>`;
+        document.getElementById("msg-alarme").innerHTML = `<h2>🔔 AVISO ${h}</h2><p>Hora de olhar o cardápio!</p>`;
         document.getElementById("painel-alarme").style.display = "block";
         this.tocarSom();
     },
+
     tocarSom() {
         if(!this.audioCtx) this.audioCtx = new AudioContext();
         const osc = this.audioCtx.createOscillator();
@@ -123,10 +143,12 @@ const app = {
         }, 800);
         this.oscillator = osc;
     },
+
     pararAlarme() {
         document.getElementById("painel-alarme").style.display = "none";
         if(this.oscillator) { this.oscillator.stop(); clearInterval(this.loopSom); }
     },
+
     reroll(dia, campo) {
         let p = JSON.parse(localStorage.getItem("db_v28_final"));
         const rand = (a) => a[Math.floor(Math.random()*a.length)];
@@ -136,6 +158,7 @@ const app = {
         localStorage.setItem("db_v28_final", JSON.stringify(p));
         this.mudarAba('semana');
     },
+
     mudarAba(aba, btn) {
         if (btn) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); }
         const p = JSON.parse(localStorage.getItem("db_v28_final"));
@@ -143,21 +166,25 @@ const app = {
         const hojeIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
         const nomes = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         const d = p[nomes[hojeIdx]];
+
         if (aba === 'dia') {
-            painel.innerHTML = `<div class="bloco"><h3>☕ Café</h3><p><b>${d.cafe}</b>${d.beb ? '<br>• '+d.beb : ''}</p>${d.isM ? `<div class="segunda-opcao">${d.s}</div>` : ''}</div>
+            painel.innerHTML = `<div class="bloco"><h3>☕ Café</h3><p><b>${d.cafe}</b>${d.beb ? '<br>• '+d.beb : ''}</p>${d.isM ? `<div class="segunda-opcao">Sólido: ${d.s}</div>` : ''}</div>
                                 <div class="bloco"><h3>🍛 Almoço</h3><p>${d.arr}, ${d.fei}, ${d.pro}, ${d.aco}</p></div>
                                 <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jan}</p></div>`;
         } else if (aba === 'semana') {
-            let h = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>Almoço</th><th>Jantar</th></tr>';
+            let h = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>L.M</th><th>Almoço</th><th>L.T</th><th>Jantar</th></tr>';
             nomes.forEach((n, i) => {
                 const dia = p[n];
-                h += `<tr class="${i===hojeIdx?'hoje-row':''}"><td><b>${n}</b></td><td>${dia.cafe}<button class="btn-reroll" onclick="app.reroll('${n}','cafe')">🎲</button></td><td>${dia.pro}</td><td>${dia.jan}</td></tr>`;
+                h += `<tr class="${i===hojeIdx?'hoje-row':''}"><td><b>${n}</b></td>
+                    <td>${dia.cafe}<button class="btn-reroll" onclick="app.reroll('${n}','cafe')">🎲</button></td>
+                    <td>${dia.lM}</td>
+                    <td>${dia.pro} + ${dia.aco}</td>
+                    <td>${dia.lT}</td>
+                    <td>${dia.jan}</td></tr>`;
             });
             painel.innerHTML = h + '</table></div>';
         } else if (aba === 'receitas') {
             painel.innerHTML = '<h3>Ingredientes Permanentes</h3><textarea class="edit-box" oninput="localStorage.setItem(\'ing\', this.value)">'+(localStorage.getItem('ing')||'')+'</textarea>';
-        } else if (aba === 'compras') {
-            painel.innerHTML = '<h3>Lista de Compras</h3><p>Baseada nos lanches e ingredientes.</p>';
         }
     }
 };
