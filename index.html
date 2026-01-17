@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio Inteligente v14</title>
+    <title>Cardápio Inteligente v14.R (Revisada)</title>
     <style>
         :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; --accent: #ff9800; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); line-height: 1.4; }
@@ -13,13 +13,12 @@
         .tab { flex: 1; padding: 12px 5px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; border: none; background: none; }
         .tab.active { background: var(--primary); color: white; }
 
-        .bloco { border-left: 5px solid var(--primary); background: #f9f9f9; padding: 15px; margin-bottom: 12px; border-radius: 5px; position: relative; }
+        .bloco { border-left: 5px solid var(--primary); background: #f9f9f9; padding: 15px; margin-bottom: 12px; border-radius: 5px; }
         .bloco h3 { margin: 0 0 5px 0; font-size: 0.85em; color: #666; text-transform: uppercase; }
         
-        /* Estilo para edição */
-        .editavel { border: 1px dashed #ccc; padding: 10px; background: white; border-radius: 5px; min-height: 40px; outline: none; transition: 0.3s; }
-        .editavel:focus { border-color: var(--primary); background: #f0fff0; }
-        .aviso-edit { font-size: 10px; color: #999; display: block; margin-top: 5px; }
+        /* Aba Ingredientes Editável */
+        .editavel { border: 1px solid #ddd; padding: 15px; background: white; border-radius: 8px; min-height: 250px; outline: none; width: 100%; box-sizing: border-box; font-family: inherit; font-size: 14px; white-space: pre-wrap; }
+        .editavel:focus { border-color: var(--primary); border-width: 2px; }
 
         .table-wrapper { width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 950px; }
@@ -39,7 +38,7 @@
         <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
         <button class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
     </div>
-    <div id="conteudo-principal">Sincronizando cardápio v14...</div>
+    <div id="conteudo-principal">Carregando cardápio...</div>
 </div>
 
 <script>
@@ -58,7 +57,7 @@ const app = {
         ],
         almoco: {
             arroz: ["Arroz Branco", "Arroz com Cenoura"],
-            feijoes: ["Feijão carioca", "Feijão preto", "Feijão fradinho"],
+            feijoes: ["Carioca", "Preto", "Fradinho"],
             proteinas: ["Frango assado", "Carne moída", "Bife no molho", "Peixe frito", "Fígado acebolado", "Almôndegas"],
             acompa: ["Puré de batata", "Salada de maionese", "Couve refogada", "Farofa", "Creme de milho", "Vinagrete"]
         },
@@ -69,59 +68,63 @@ const app = {
             { t: "Cuscuz temperado", c: "sol", i: "Milho, Calabresa, Ovos" },
             { t: "Tapioca de frango", c: "sol", i: "Goma, Frango desfiado" },
             { t: "Hambúrguer", c: "sol", i: "Pão, Carne, Alface" },
-            { t: "Caldo de canoa", c: "liq", i: "Aipim, Carne seca" }
+            { t: "Caldo de Aipim", c: "liq", i: "Aipim, Carne seca" }
         ],
         bebidasCafe: ["Café puro", "Leite", "Chá de Capim Santo", "Suco de Laranja"],
         lanchesM: ["Banana", "Maçã", "Uva", "Melancia", "Pera", "Morango", "Manga", "Abacaxi", "Kiwi"],
-        lanchesT: ["Iogurte Natural", "Bolo de Cenoura", "Pão de Queijo", "Pipoca", "Sanduíche Natural", "Vitamina", "Bolacha Maria", "Salada de Frutas"]
+        lanchesT: ["Iogurte Natural", "Bolo de Cenoura", "Pão de Queijo", "Pipoca", "Sanduíche Natural", "Vitamina de Morango", "Bolacha Maria", "Salada de Frutas"]
     },
 
     shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
+        let a = [...array];
+        for (let i = a.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[array[j]]] = [array[j], array[i]];
+            [a[i], a[j]] = [a[j], a[i]];
         }
-        return array;
+        return a;
     },
 
     gerarTudo() {
         const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         let plano = {};
         
-        // Embaralha as listas para garantir 0 repetição
-        let dCafe = this.shuffle([...this.banco.cafe]);
-        let dLM = this.shuffle([...this.banco.lanchesM]);
-        let dLT = this.shuffle([...this.banco.lanchesT]);
-        let dJan = this.shuffle([...this.banco.jantar]);
-        let dProt = this.shuffle([...this.banco.almoco.proteinas]);
-        let dAcom = this.shuffle([...this.banco.almoco.acompa]);
+        let dCafe = this.shuffle(this.banco.cafe);
+        let dLM = this.shuffle(this.banco.lanchesM);
+        let dLT = this.shuffle(this.banco.lanchesT);
+        let dJan = this.shuffle(this.banco.jantar);
+        let dProt = this.shuffle(this.banco.almoco.proteinas);
+        let dAcom = this.shuffle(this.banco.almoco.acompa);
+
+        // Regra do Feijão (4 dias iguais)
+        const f1 = this.banco.almoco.feijoes[Math.floor(Math.random()*3)];
+        const f2 = this.banco.almoco.feijoes.filter(f => f !== f1)[0];
 
         dias.forEach((d, index) => {
-            const itemC = dCafe[index];
-            const itemJ = dJan[index];
+            const itemC = dCafe[index] || dCafe[0];
+            const itemJ = dJan[index % dJan.length];
             const isFDS = (d === "SÁBADO" || d === "DOMINGO");
 
-            // Bebida única (Lógica reforçada)
+            // Bebida Única
             const bebC = itemC.c === "liq" ? "" : "• " + this.banco.bebidasCafe[Math.floor(Math.random()*4)];
+            const feijaoDoDia = (index < 4) ? f1 : f2;
             
-            // Regra do Fígado
             let pAlmoco = dProt[index % dProt.length];
-            if (isFDS && pAlmoco.includes("Fígado")) pAlmoco = "Frango Grelhado";
+            if (isFDS && pAlmoco.includes("Fígado")) pAlmoco = "Bife de Frango";
 
             plano[d] = {
                 cafe: { txt: `${itemC.t}<br>${bebC}`, ing: itemC.i, liq: itemC.c === "liq" },
-                lancheM: dLM[index],
+                lancheM: dLM[index] || "Maçã",
                 almoco: {
-                    txt: `• ${this.banco.almoco.arroz[index % 2]}<br>• ${this.banco.almoco.feijoes[index % 3]}<br>• ${pAlmoco}<br>• ${dAcom[index % dAcom.length]}<br>• 🥤 Suco`,
-                    ing: `Arroz, Feijão, ${pAlmoco}, Acompanhamento, Frutas para suco`,
+                    txt: `• ${this.banco.almoco.arroz[index % 2]}<br>• Feijão ${feijaoDoDia}<br>• ${pAlmoco}<br>• ${dAcom[index % dAcom.length]}<br>• 🥤 Suco`,
+                    ing: `Arroz, Feijão ${feijaoDoDia}, ${pAlmoco}, ${dAcom[index % dAcom.length]}`,
                     sob: isFDS ? "🍮 Sobremesa" : ""
                 },
-                lancheT: dLT[index],
+                lancheT: dLT[index] || "Iogurte",
                 jantar: { txt: `${itemJ.t}${itemJ.c === "liq" ? "" : "<br>• 🥤 Suco"}`, ing: itemJ.i }
             };
         });
 
-        localStorage.setItem("plano_v14", JSON.stringify(plano));
+        localStorage.setItem("plano_v14_final", JSON.stringify(plano));
         return plano;
     },
 
@@ -132,7 +135,7 @@ const app = {
             btn.classList.add('active');
         }
 
-        let plano = JSON.parse(localStorage.getItem("plano_v14")) || this.gerarTudo();
+        let plano = JSON.parse(localStorage.getItem("plano_v14_final")) || this.gerarTudo();
         const diasNomes = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         const hojeIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
         const diaNome = diasNomes[hojeIdx];
@@ -140,7 +143,7 @@ const app = {
 
         if (aba === 'dia') {
             container.innerHTML = `
-                <div class="bloco"><h3>☕ Café</h3><p>${d.cafe.txt}</p>${d.cafe.liq ? '<span class="opcional">Dica: Se preferir, troque por Pão com Café</span>' : ''}</div>
+                <div class="bloco"><h3>☕ Café</h3><p>${d.cafe.txt}</p></div>
                 <div class="bloco"><h3>🍎 Lanche M</h3><p>${d.lancheM}</p></div>
                 <div class="bloco"><h3>🍛 Almoço</h3><p>${d.almoco.txt}</p><b>${d.almoco.sob}</b></div>
                 <div class="bloco"><h3>🍪 Lanche T</h3><p>${d.lancheT}</p></div>
@@ -163,17 +166,10 @@ const app = {
             container.innerHTML = html + `</table></div>`;
         }
         else if (aba === 'receitas') {
+            const salvo = localStorage.getItem("nota_ing") || `HOJE (${diaNome}):\n- Café: ${d.cafe.ing}\n- Almoço: ${d.almoco.ing}\n- Jantar: ${d.jantar.ing}`;
             container.innerHTML = `
-                <h2>Ingredientes para Hoje (${diaNome})</h2>
-                <div class="bloco"><h3>🛒 O que usar (Clique para editar)</h3>
-                    <div class="editavel" contenteditable="true">
-                        <b>CAFÉ:</b> ${d.cafe.ing}<br><br>
-                        <b>ALMOÇO:</b> ${d.almoco.ing}<br><br>
-                        <b>JANTAR:</b> ${d.jantar.ing}<br><br>
-                        <b>EXTRAS:</b> ${d.lancheM}, ${d.lancheT}
-                    </div>
-                    <small class="aviso-edit">Você pode apagar ou escrever novos itens acima.</small>
-                </div>
+                <h2>Ingredientes e Notas (Editável)</h2>
+                <textarea class="editavel" oninput="localStorage.setItem('nota_ing', this.value)">${salvo}</textarea>
             `;
         }
         else if (aba === 'compras') {
@@ -182,117 +178,17 @@ const app = {
                 todos.push(plano[dn].cafe.ing, plano[dn].lancheM, plano[dn].lancheT, plano[dn].jantar.ing);
             });
             let unique = [...new Set(todos.join(', ').split(', '))].sort();
-            container.innerHTML = `<h2>Compras da Semana</h2><div class="bloco">${unique.map(i => `<span class="compras-item">${i}</span>`).join('')}</div>`;
+            container.innerHTML = `<h2>Lista de Compras</h2><div class="bloco">${unique.map(i => `<span class="compras-item">${i}</span>`).join('')}</div>`;
         }
     }
 };
 
-window.onload = () => app.mudarAba('dia');
-</script>
-</body>
-</html>        <button onclick="app.reset()" class="btn-reset">Forçar Carregamento (Reset)</button>
-    </div>
-</div>
-
-<script>
-const app = {
-    // Dados base
-    dados: {
-        cafe: ["Pão com Ovo", "Cuscuz com Ovo", "Pão com Queijo", "Aipim Cozido", "Batata Doce", "Pão com Manteiga"],
-        liq: ["Mingau de Tapioca", "Mingau de Milho"],
-        bebidas: ["Café", "Leite", "Chá", "Suco"],
-        almoco: {
-            arroz: ["Arroz Branco", "Arroz com Cenoura"],
-            feijao: ["Carioca", "Preto", "Fradinho"],
-            prot: ["Frango Assado", "Carne Moída", "Bife", "Peixe", "Almôndegas"],
-            acompa: ["Puré", "Salada", "Couve", "Farofa", "Creme de Milho"]
-        },
-        lanches: ["Banana", "Maçã", "Uva", "Melancia", "Iogurte", "Bolo", "Pão de Queijo", "Pipoca", "Sanduíche", "Vitamina"]
-    },
-
-    init() {
-        try {
-            if (!localStorage.getItem("cardapio_v16")) this.gerar();
-            this.aba('dia');
-        } catch (e) {
-            this.reset();
-        }
-    },
-
-    reset() {
-        localStorage.clear();
-        this.gerar();
-        this.aba('dia');
-    },
-
-    gerar() {
-        const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
-        let plano = {};
-        
-        // Feijão repetido por 4 dias
-        const f1 = this.dados.almoco.feijao[Math.floor(Math.random()*3)];
-        const f2 = this.dados.almoco.feijao.filter(f => f !== f1)[0];
-
-        dias.forEach((d, i) => {
-            const isLiq = Math.random() > 0.8;
-            const pratoCafe = isLiq ? this.dados.liq[i % 2] : this.dados.cafe[i % 6];
-            const beb = isLiq ? "" : "• " + this.dados.bebidas[i % 4];
-            
-            plano[d] = {
-                cafe: pratoCafe + "<br>" + beb,
-                lancheM: this.dados.lanches[i],
-                almoco: "• " + this.dados.almoco.arroz[i % 2] + "<br>• Feijão " + (i < 4 ? f1 : f2) + "<br>• " + this.dados.almoco.prot[i % 5] + "<br>• " + this.dados.almoco.acompa[i % 5],
-                lancheT: this.dados.lanches[(i + 5) % 10],
-                jantar: "Sopa ou Arroz com Ovo",
-                ing: "Ingredientes base do dia: " + pratoCafe + ", " + (i < 4 ? f1 : f2) + ", etc."
-            };
-        });
-        localStorage.setItem("cardapio_v16", JSON.stringify(plano));
-    },
-
-    aba(nome, btn) {
-        const div = document.getElementById("conteudo");
-        const plano = JSON.parse(localStorage.getItem("cardapio_v16"));
-        if (!plano) return;
-
-        if (btn) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-        }
-
-        const hojeIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
-        const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
-        const d = plano[dias[hojeIdx]];
-
-        if (nome === 'dia') {
-            div.innerHTML = `
-                <div class="bloco"><h3>☕ Café</h3><p>${d.cafe}</p></div>
-                <div class="bloco"><h3>🍎 Lanche M</h3><p>${d.lancheM}</p></div>
-                <div class="bloco"><h3>🍛 Almoço</h3><p>${d.almoco}</p></div>
-                <div class="bloco"><h3>🍪 Lanche T</h3><p>${d.lancheT}</p></div>
-                <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jantar}</p></div>
-            `;
-        } else if (nome === 'semana') {
-            let h = '<div class="table-wrapper"><table><tr><th>Refeição</th>';
-            dias.forEach(dn => h += `<th>${dn}</th>`);
-            h += '</tr>';
-            const linhas = [["Café", "cafe"], ["L. Manhã", "lancheM"], ["Almoço", "almoco"], ["L. Tarde", "lancheT"], ["Jantar", "jantar"]];
-            linhas.forEach(l => {
-                h += `<tr><td><b>${l[0]}</b></td>`;
-                dias.forEach(dn => h += `<td>${plano[dn][l[1]]}</td>`);
-                h += '</tr>';
-            });
-            div.innerHTML = h + '</table></div>';
-        } else if (nome === 'receitas') {
-            div.innerHTML = `<h3>Ingredientes (Editável)</h3><textarea oninput="localStorage.setItem('notas', this.value)">${localStorage.getItem('notas') || d.ing}</textarea>`;
-        } else {
-            div.innerHTML = `<h3>Lista de Compras</h3><div class="bloco">Consulte a tabela para ver todos os itens da semana.</div>`;
-        }
-    }
+window.onload = () => {
+    // Força a exibição imediata
+    const container = document.getElementById("conteudo-principal");
+    container.innerHTML = "Iniciando...";
+    app.mudarAba('dia');
 };
-
-// Tenta iniciar 
-window.addEventListener('load', () => app.init());
 </script>
 </body>
 </html>
