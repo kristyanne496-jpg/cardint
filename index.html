@@ -7,6 +7,41 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4CAF50">
     <style>
+        .table-wrapper { 
+    width: 100%; 
+    overflow-x: auto; /* Permite deslizar para o lado no celular */
+    margin-top: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    min-width: 900px; /* Garante que as colunas não fiquem espremidas */
+    background: white; 
+}
+th { 
+    background: var(--primary); 
+    color: white; 
+    padding: 12px; 
+    font-size: 0.85em; 
+    text-transform: uppercase;
+}
+td { 
+    padding: 10px; 
+    border: 1px solid #eee; 
+    vertical-align: top; 
+    font-size: 0.8em; 
+    line-height: 1.4; 
+}
+.ref-header { 
+    background: #f1f1f1; 
+    font-weight: bold; 
+    color: var(--primary); 
+    width: 100px; 
+    position: sticky; 
+    left: 0; /* Mantém o nome da refeição visível ao deslizar */
+}
         /* Ajuste para as bebidas não embolarem o texto */
 td br {
     content: "";
@@ -306,46 +341,50 @@ container.innerHTML = avisoPreparo + `... resto do seu código ...`;
     },
 
         renderSemana(el) {
-        const plano = JSON.parse(localStorage.getItem("plano"));
-        const diaIdx = parseInt(localStorage.getItem("diaAtual"));
-        const semIdx = Math.floor(diaIdx / 7);
-        const semana = plano[semIdx];
-        
-        let html = `<h1>Detalhes da Semana</h1>`;
-        
-        Object.entries(semana).forEach(([dia, d]) => {
-            html += `
-                <div class="semana-dia-box">
-                    <h2>${dia}-feira</h2>
-                    
-                    <div class="detalhe-refeicao">
-                        <strong>☕ Café da Manhã:</strong>
-                        <p>${d.cafe.base} com ${d.cafe.acompanhamento} (${d.cafe.bebida})</p>
-                    </div>
+        renderTabela(container, semana) {
+    const dias = ["SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO", "DOMINGO"];
+    const refeicoes = [
+        { label: "☕ Café", key: "cafe" },
+        { label: "🍎 Lanche M.", key: "lancheM" },
+        { label: "🍛 Almoço", key: "almoco" },
+        { label: "🍪 Lanche T.", key: "lancheT" },
+        { label: "🌙 Jantar", key: "jantar" }
+    ];
 
-                    <div class="detalhe-refeicao">
-                        <strong>🍎 Lanche da Manhã:</strong>
-                        <p>${d.lancheManha}</p>
-                    </div>
+    let html = `<h2>Cardápio Semanal</h2><div class="table-wrapper"><table>`;
+    
+    // Cabeçalho com os Dias
+    html += `<thead><tr><th class="ref-header">Refeição</th>`;
+    dias.forEach(dia => html += `<th>${dia}</th>`);
+    html += `</tr></thead><tbody>`;
 
-                    <div class="detalhe-refeicao">
-                        <strong>🍛 Almoço:</strong>
-                        <p>${d.almoco.arroz}, ${d.almoco.feijao}, ${d.almoco.proteina} e ${d.almoco.acompanhamento}</p>
-                    </div>
-
-                    <div class="detalhe-refeicao">
-                        <strong>🍪 Lanche da Tarde:</strong>
-                        <p>${d.lancheTarde}</p>
-                    </div>
-
-                    <div class="detalhe-refeicao">
-                        <strong>🌙 Jantar:</strong>
-                        <p>${d.jantar}</p>
-                    </div>
-                </div>
-            `;
+    // Linhas com as Refeições
+    refeicoes.forEach(ref => {
+        html += `<tr><td class="ref-header">${ref.label}</td>`;
+        dias.forEach(dia => {
+            let info = semana[dia][ref.key];
+            // Trata se o dado é um objeto (como almoco) ou string
+            let textoRef = "";
+            if (typeof info === 'string') {
+                textoRef = info;
+            } else if (ref.key === 'cafe') {
+                textoRef = `${info.txt}<br>${info.obs}`;
+            } else if (ref.key === 'almoco') {
+                textoRef = `${info.txt}<br>${info.obs}<br>${info.sobremesa}`;
+            } else if (ref.key === 'jantar') {
+                textoRef = info; // ou info.prato se for objeto
+            }
+            
+            html += `<td>${textoRef}</td>`;
         });
-        
+        html += `</tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    html += `<p style="font-size:0.7em; color:#666; margin-top:10px">← Deslize para o lado para ver todos os dias →</p>`;
+    
+    container.innerHTML = html;
+}
         el.innerHTML = html;
         window.scrollTo(0,0); // Volta para o topo ao abrir
     },
