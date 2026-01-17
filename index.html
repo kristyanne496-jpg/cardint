@@ -148,22 +148,22 @@ td br {
 <script>
 const app = {
     config: { feijaoDias: 4, proteinasRepetirMax: 2, totalSemanas: 12 },
-    https://www.templatemaker.nl/pt/
+    // https://www.templatemaker.nl/pt/
     banco: {
         cafe: {
             bases: ["Pão francês","Pão de forma","Pão caseiro","Tapioca","Cuscuz","Bolo simples caseiro","Panqueca","Crepioca","Mingau de aveia","Mingau de milho","Pão de queijo","Torrada","Aipim cozido","Banana da terra cozida","Batata doce cozida","Iogurte com frutas","Mingau de tapioca","Mingau de milho"],
             acompanhamentos: ["Manteiga ou Margarina","Requeijão","Cream cheese","Catupiry","Queijo mussarela","Ovo mexido","Ovo cozido","Patê de frango caseiro","Patê de atum caseiro","Presunto","Mortadela","Peito de peru","Presunto",],
-            bebidas: ["Café","Leite com achocolatado","Chá","Vitamina","Chá gelado","Suco de uva integral","Suco"]
+            bebidas: ["Café","Leite com achocolatado","Chá","Vitamina","Chá gelado","Suco de uva integral","Suco"],
                 // Substitua as listas antigas por estas:
-bebidaPadaria: ["Café preto","Leite com achocolatado","Chá gelado","Chá"], 
-sucos: ["Maracujá","Laranja","Abacaxi","Limão","Cupuaçu","Cacau","Graviola","Manga","Melancia"],
-sobremesas: ["Gelatina", "Sorvete", "Pudim", "Mousse de maracujá", "Mousse de limão"],
+            bebidaPadaria: ["Café preto","Leite com achocolatado","Chá gelado","Chá"], 
+            sucos: ["Maracujá","Laranja","Abacaxi","Limão","Cupuaçu","Cacau","Graviola","Manga","Melancia"],
+            sobremesas: ["Gelatina", "Sorvete", "Pudim", "Mousse de maracujá", "Mousse de limão"],
     
         },
         almoco: {
             feijoes: ["Feijão carioca","Feijão preto","Feijão fradinho"],
             proteinas: ["Frango cozido","Frango frito","Frango assado","Frango desfiado","Carne moída","Carne do sol","Carne de panela","Bife no molho","Almôndega","Peixe frito","Steak de frango","Iscas de frango","Fígado Acebolado","Moqueca","Ovo mexido","Panqueca de carne","Linguiça","Panqueca de frango","Salsicha"],
-            acompanhamentos: ["Macarrão","Purê de abóbora","Purê de batata,"Purê de aipim","Batata cozida","Mandioca frita","Batata frita","Salada de Maionese","Salada de Alface com tomate","Salada de couve com tomate","Vinagrete","Couve refogada","Creme de milho","Farofa pronta","Farofa de banana da terra","Farofa de cebola","Farofa de cenoura"],
+            acompanhamentos: ["Macarrão","Purê de abóbora","Purê de batata","Purê de aipim","Batata cozida","Mandioca frita","Batata frita","Salada de Maionese","Salada de Alface com tomate","Salada de couve com tomate","Vinagrete","Couve refogada","Creme de milho","Farofa pronta","Farofa de banana da terra","Farofa de cebola","Farofa de cenoura"],
             especial: "Feijoada Completa"
         },
         jantar: {
@@ -173,7 +173,6 @@ sobremesas: ["Gelatina", "Sorvete", "Pudim", "Mousse de maracujá", "Mousse de l
             frutas: ["Banana","Maçã","Uva","Abacaxi","Pera","Manga","Melancia","Maçã Verde","Tangerina","Morango","Laranja","Ameixa"],
             tarde: ["Biscoito","Iogurte com frutas","Iogurte com granola","Bolo caseiro","Vitamina de açaí","Vitamina de frutas","Sonho de padaria","Salada de frutas"]
         }
-    },
 
     // --- LÓGICA DE GERAÇÃO ---
     escolher(lista) { return lista[Math.floor(Math.random() * lista.length)]; },
@@ -196,11 +195,11 @@ sobremesas: ["Gelatina", "Sorvete", "Pudim", "Mousse de maracujá", "Mousse de l
 
         diasNome.forEach((dia, index) => {
             // Localize onde o 'semana[d]' é montado e use esta lógica:
-const baseCafe = this.escolher(this.banco.cafe);
+const baseCafe = this.escolher(this.banco.cafe.bases);
 const isMingau = baseCafe.toLowerCase().includes("mingau");
 const prot = this.escolher(this.banco.proteina);
 
-semana[d] = {
+semana[dia] = {
     cafe: {
         txt: isMingau ? baseCafe : `${baseCafe} com ${this.escolher(this.banco.acompa)}<br>• ${this.escolher(this.banco.bebidaPadaria)}`,
         obs: isMingau ? "<span class='opcional'>Opção 2: Pão com Café</span>" : ""
@@ -209,16 +208,16 @@ semana[d] = {
     almoco: {
         txt: `Arroz e Feijão<br>• ${prot}<br>• ${this.escolher(this.banco.acompaAlmoco)}<br>• Suco de ${this.escolher(this.banco.sucos)}`,
         obs: prot.includes("Fígado") ? "<span class='opcional'>Opção 2: Frango Grelhado</span>" : "",
-        sobremesa: (d === "SÁBADO" || d === "DOMINGO") ? `<span class='sobremesa'>🍮 ${this.escolher(this.banco.sobremesas)}</span>` : ""
+        sobremesa: (d === "Sábado" || d === "Domingo") ? `<span class='sobremesa'>🍮 ${this.escolher(this.banco.sobremesas)}</span>` : ""
     },
     lancheT: `${this.escolher(["Biscoito", "Bolo", "Torradas"])} com ${this.escolher(["Chá", "Leite com achocolatado"])}`,
     jantar: `${this.escolher(this.banco.jantar)}<br>• Suco de ${this.escolher(this.banco.sucos)}`
 };
-            // No bloco do Almoço:
-almoco: {
+ // No bloco do Almoço:
+    almoco: {
     txt: `Arroz e Feijão<br>• ${prot}<br>• ${this.escolher(this.banco.acompaAlmoco)}<br>• 🥤 Suco de ${this.escolher(this.banco.sucos)}`,
     obs: prot.includes("Fígado") ? "<span class='opcional'>Opção 2: Frango Grelhado</span>" : "",
-    sobremesa: (d === "SÁBADO" || d === "DOMINGO") ? `<span class='sobremesa'>🍮 ${this.escolher(this.banco.sobremesas)}</span>` : ""
+    sobremesa: (d === "Sábado" || d === "Domingo") ? `<span class='sobremesa'>🍮 ${this.escolher(this.banco.sobremesas)}</span>` : ""
 },
 
 // No bloco do Jantar:
@@ -243,13 +242,7 @@ jantar: `${this.escolher(this.banco.jantar)}<br>• 🥤 Suco de ${this.escolher
                 almocoFinal.proteina = this.banco.almoco.especial;
             }
 
-            semana[dia] = {
-                cafe: { base: this.escolher(this.banco.cafe.bases), acompanhamento: this.escolher(this.banco.cafe.acompanhamentos), bebida: this.escolher(this.banco.cafe.bebidas) },
-                lancheManha: this.escolher(this.banco.lanches.frutas),
-                almoco: almocoFinal,
-                lancheTarde: this.escolher(this.banco.lanches.tarde),
-                jantar: this.escolher(this.banco.jantar.opcoes)
-            };
+                       };
         });
         return semana;
     },
@@ -279,7 +272,7 @@ jantar: `${this.escolher(this.banco.jantar)}<br>• 🥤 Suco de ${this.escolher
 
         obterDados() {
         let plano = JSON.parse(localStorage.getItem("plano"));
-        if (!plano) plano = this.gerarTudo();
+        if (!plano) plano;
         
         // Pega a data real do sistema
         const dataHoje = new Date();
@@ -297,16 +290,14 @@ jantar: `${this.escolher(this.banco.jantar)}<br>• 🥤 Suco de ${this.escolher
             diaIdx: diaIdxCorrigido 
         };
     },
-,
 
     // --- INTERFACE ---
     mudarAba(aba) {
         const abas = document.querySelectorAll('.tab');
         abas.forEach(t => t.classList.remove('active'));
-        event?.target?.classList?.add('active') || abas[0].classList.add('active');
-
+        onclick="app.mudarAba('dia', this)"
         const container = document.getElementById("conteudo-principal");
-        const info = this.obterDadosHoje();
+        const info;
         
         if (aba === 'dia') {
             // Adicione esta linha logo antes do container.innerHTML:
@@ -317,7 +308,7 @@ const avisoPreparo = `
     </div>`;
 
 // E no innerHTML, chame a variável:
-container.innerHTML = avisoPreparo + `... resto do seu código ...`;
+container.innerHTML = avisoPreparo ;
 
 
     renderDia(el, info) {
@@ -340,8 +331,8 @@ container.innerHTML = avisoPreparo + `... resto do seu código ...`;
         `;
     },
 
-        renderSemana(el) {
-        renderTabela(container, semana) {
+        this.renderSemana(el) {
+    renderTabela(container, semana) {
     const dias = ["SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO", "DOMINGO"];
     const refeicoes = [
         { label: "☕ Café", key: "cafe" },
@@ -481,7 +472,7 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => console.log("SW offline mode ready"));
 }
 
-app.iniciar();
+app.iniciar();{
         verificarViradaSemana() {
         const hoje = new Date();
         const dataUltimoAcesso = localStorage.getItem("ultimaDataAcesso");
