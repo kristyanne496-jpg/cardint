@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Cardápio Inteligente</title>
+    <title>Cardápio Inteligente v5</title>
     <style>
         :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; --accent: #ff9800; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
@@ -12,7 +12,7 @@
         .tab { flex: 1; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .tab.active { background: var(--primary); color: white; }
         .table-wrapper { width: 100%; overflow-x: auto; margin-top: 15px; border: 1px solid #ddd; border-radius: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; background: white; }
+        table { width: 100%; border-collapse: collapse; min-width: 950px; background: white; }
         th { background: var(--primary); color: white; padding: 12px; font-size: 0.85em; text-transform: uppercase; }
         td { padding: 10px; border: 1px solid #eee; vertical-align: top; font-size: 0.8em; line-height: 1.4; }
         .ref-header { background: #f1f1f1; font-weight: bold; color: var(--primary); width: 110px; position: sticky; left: 0; z-index: 2; border-right: 2px solid #ddd;}
@@ -32,29 +32,57 @@
         <div class="tab" onclick="app.mudarAba('semana', this)">Tabela</div>
         <div class="tab" onclick="app.mudarAba('compras', this)">Compras</div>
     </div>
-    <div id="conteudo-principal">Carregando cardápio...</div>
+    <div id="conteudo-principal">Carregando novo cardápio...</div>
 </div>
 
 <script>
 const app = {
     banco: {
-        cafe: {
-            bases: ["Pão francês","Pão de forma","Pão caseiro","Tapioca","Cuscuz","Bolo simples caseiro","Panqueca","Crepioca","Mingau de aveia","Mingau de milho","Pão de queijo","Torrada","Aipim cozido","Banana da terra cozida","Batata doce cozida","Iogurte com frutas"],
-            bebidas: ["Café","Leite com achocolatado","Chá","Vitamina","Suco de uva"]
-        },
-        acompa: {
-            frios: ["Queijo mussarela","Presunto","Requeijão","Mortadela","Peito de peru"],
-            pates: ["Patê de frango caseiro","Patê de atum caseiro"],
-            geral: ["Manteiga","Ovo mexido","Ovo cozido"]
-        },
+        cafe: [
+            { txt: "Pão com ovo", cat: "pao" },
+            { txt: "Pão com manteiga ou margarina", cat: "pao" },
+            { txt: "Mingau de tapioca", cat: "liquido" },
+            { txt: "Mingau de milho", cat: "liquido" },
+            { txt: "Mingau de chocolate", cat: "liquido" },
+            { txt: "Cuscuz com ovo", cat: "cuscuz" },
+            { txt: "Cuscuz com banana da terra", cat: "cuscuz" },
+            { txt: "Cuscuz com manteiga", cat: "cuscuz" },
+            { txt: "Pão caseiro", cat: "pao" },
+            { txt: "Pão com queijo e presunto", cat: "pao" },
+            { txt: "Pão com cream cheese e queijo", cat: "pao" },
+            { txt: "Pão com catupiry e queijo", cat: "pao" },
+            { txt: "Pão com peito de peru", cat: "pao" },
+            { txt: "Pão com mortadela", cat: "pao" },
+            { txt: "Pão com patê de frango", cat: "pao" },
+            { txt: "Pão com patê de atum", cat: "pao" },
+            { txt: "Torrada com patê de frango", cat: "torrada" },
+            { txt: "Torrada com patê de atum", cat: "torrada" },
+            { txt: "Arroz doce", cat: "liquido" },
+            { txt: "Cuscuz de tapioca", cat: "outros" },
+            { txt: "Pão de queijo", cat: "outros" },
+            { txt: "Banana da terra cozida", cat: "cozido" },
+            { txt: "Aipim cozido", cat: "cozido" },
+            { txt: "Batata doce cozida", cat: "cozido" }
+        ],
+        bebidasCafe: ["Café", "Leite com achocolatado", "Chá", "Vitamina", "Suco"],
         almoco: {
-            proteinas: ["Frango assado","Carne moída","Carne de panela","Bife no molho","Almôndega","Peixe frito","Fígado acebolado","Ovo mexido","Frango grelhado"],
+            proteinas: ["Frango assado", "Carne moída", "Carne de panela", "Bife no molho", "Peixe frito", "Fígado acebolado", "Frango grelhado"],
             sucos: ["Suco de Maracujá", "Suco de Laranja", "Suco de Abacaxi", "Suco de Limão"],
             sobremesas: ["Gelatina", "Pudim", "Mousse de maracujá"]
         },
-        jantar: {
-            opcoes: ["Arroz com ovo","Arroz com frango","Sopa","Caldo de carne","Caldo de frango","Pizza","Hambúrguer","Arroz doce","Tapioca","Cuscuz com ovo","Mingau de milho"]
-        }
+        jantar: [
+            { txt: "Arroz com ovo", cat: "solido" },
+            { txt: "Arroz com frango", cat: "solido" },
+            { txt: "Sopa", cat: "liquido" },
+            { txt: "Caldo de carne", cat: "liquido" },
+            { txt: "Caldo de frango", cat: "liquido" },
+            { txt: "Pizza", cat: "solido" },
+            { txt: "Hambúrguer", cat: "solido" },
+            { txt: "Arroz doce", cat: "liquido" },
+            { txt: "Tapioca", cat: "solido" },
+            { txt: "Cuscuz com ovo", cat: "solido" },
+            { txt: "Mingau de milho", cat: "liquido" }
+        ]
     },
 
     escolher(lista) { return lista[Math.floor(Math.random() * lista.length)]; },
@@ -65,48 +93,37 @@ const app = {
         for (let s = 0; s < 12; s++) {
             let semana = {};
             dias.forEach(d => {
-                // LÓGICA CAFÉ COM REGRAS DE ACOMPANHAMENTO
-                const base = this.escolher(this.banco.cafe.bases);
-                let listaAcompa = [...this.banco.acompa.geral];
-                
-                if (base.toLowerCase().includes("pão")) {
-                    listaAcompa = listaAcompa.concat(this.banco.acompa.frios, this.banco.acompa.pates);
-                } else if (base.toLowerCase().includes("torrada")) {
-                    listaAcompa = listaAcompa.concat(this.banco.acompa.pates);
-                }
+                // CAFÉ DA MANHÃ
+                const itemCafe = this.escolher(this.banco.cafe);
+                const bebCafe = itemCafe.cat === "liquido" ? "" : `• ${this.escolher(this.banco.bebidasCafe)}`;
+                const segundaOpCafe = itemCafe.txt.match(/Tapioca|Mingau|Arroz doce/i) ? "<span class='opcional'>Opção 2: Pão com Café</span>" : "";
 
-                const acompa = this.escolher(listaAcompa);
-                const isLiquidoCafe = base.match(/Mingau|Vitamina|Iogurte/i);
-                const beb = isLiquidoCafe ? "" : `• ${this.escolher(this.banco.cafe.bebidas)}`;
-                const segundaOpCafe = base.match(/Tapioca|Mingau/i) ? "<span class='opcional'>Opção 2: Pão com Café</span>" : "";
-
-                // LÓGICA ALMOÇO
+                // ALMOÇO
                 const prot = this.escolher(this.banco.almoco.proteinas);
                 const sob = (d === "DOMINGO") ? `<span class='sobremesa'>🍮 ${this.escolher(this.banco.almoco.sobremesas)}</span>` : "";
 
-                // LÓGICA JANTAR
-                const pratoJan = this.escolher(this.banco.jantar.opcoes);
-                const isLiquidoJan = pratoJan.match(/Caldo|Mingau|Sopa|Arroz doce/i);
-                const bebJan = isLiquidoJan ? "" : `• 🥤 ${this.escolher(this.banco.almoco.sucos)}`;
-                const segundaOpJan = pratoJan.match(/Tapioca|Mingau|Arroz doce/i) ? "<span class='opcional'>Opção 2: Pão com Ovo</span>" : "";
+                // JANTAR
+                const itemJan = this.escolher(this.banco.jantar);
+                const bebJan = itemJan.cat === "liquido" ? "" : `• 🥤 ${this.escolher(this.banco.almoco.sucos)}`;
+                const segundaOpJan = itemJan.txt.match(/Tapioca|Mingau|Arroz doce/i) ? "<span class='opcional'>Opção 2: Pão com Ovo</span>" : "";
 
                 semana[d] = {
-                    cafe: { txt: `${base} com ${acompa}<br>${beb}`, obs: segundaOpCafe },
-                    lancheM: this.escolher(["Banana","Maçã","Uva","Melancia"]),
+                    cafe: { txt: `${itemCafe.txt}<br>${bebCafe}`, obs: segundaOpCafe },
+                    lancheM: this.escolher(["Banana","Maçã","Uva","Melancia","Pera"]),
                     almoco: { txt: `Refeição Completa<br>• ${prot}<br>• 🥤 ${this.escolher(this.banco.almoco.sucos)}`, obs: prot.includes("Fígado") ? "<span class='opcional'>Opção 2: Frango Grelhado</span>" : "", sobremesa: sob },
-                    lancheT: this.escolher(["Biscoito","Iogurte","Bolo"]),
-                    jantar: { txt: `${pratoJan}<br>${bebJan}`, obs: segundaOpJan }
+                    lancheT: this.escolher(["Biscoito", "Iogurte", "Bolo caseiro", "Fruta"]),
+                    jantar: { txt: `${itemJan.txt}<br>${bebJan}`, obs: segundaOpJan }
                 };
             });
             plano.push(semana);
         }
         localStorage.setItem("plano", JSON.stringify(plano));
-        localStorage.setItem("v", "4.0");
+        localStorage.setItem("v", "5.0");
         return plano;
     },
 
     obterDados() {
-        if (localStorage.getItem("v") !== "4.0") this.gerarTudo();
+        if (localStorage.getItem("v") !== "5.0") this.gerarTudo();
         let plano = JSON.parse(localStorage.getItem("plano"));
         const hoje = new Date();
         let diaIdx = hoje.getDay() === 0 ? 6 : hoje.getDay() - 1;
@@ -144,7 +161,7 @@ const app = {
             });
             container.innerHTML = html + `</table></div>`;
         } else {
-            container.innerHTML = `<h2>Compras</h2><p>Verifique o estoque de frios e frutas para a semana.</p>`;
+            container.innerHTML = `<h2>Compras</h2><p>Verifique os novos itens de café da manhã na tabela.</p>`;
         }
     },
     concluir() { alert("✅ Dia concluído!"); }
