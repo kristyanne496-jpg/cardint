@@ -3,60 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2e7d32">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048953.png">
-    <title>Cardápio v24.1 Final - Estável</title>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1ldSBDYXJkw6FwaW8iLAogICJzaG9ydF9uYW1lIjogIkNhcmTDoXBpbyIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmZmZmZmIiwKICAidGhlbWVfY29sb3IiOiAiIzJlN2QzMiIsCiAgImljb25zIjogW3sKICAgICJzcmMiOiAiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMTA0OC8xMDQ4OTUzLnBuZyIsCiAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgfV0KfQ==">
+
+    <title>Cardápio Inteligente</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 10px; padding-top: env(safe-area-inset-top); color: var(--text); }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); min-height: 90vh; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 10px 10px 10px; color: var(--text); }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); min-height: 92vh; }
         
-        /* ALARME VISUAL */
-        #painel-alarme { display: none; background: #d32f2f; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; border: 4px solid #b71c1c; animation: flash 1s infinite; z-index: 1000; }
-        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-        .btn-ciente { background: white; color: #d32f2f; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; margin-top: 15px; font-size: 16px; cursor: pointer; }
-
-        .nav-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e0e0e0; padding: 5px; border-radius: 10px; overflow-x: auto; }
+        #painel-alarme { display: none; background: #d32f2f; color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; border: 4px solid #b71c1c; animation: flash 1s infinite; }
+        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        
+        .nav-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e0e0e0; padding: 5px; border-radius: 12px; overflow-x: auto; }
         .tab { flex: 1; padding: 12px 8px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; background: transparent; font-size: 11px; white-space: nowrap; }
         .tab.active { background: var(--primary); color: white; }
         
         .bloco { border-left: 6px solid var(--primary); background: #f8f9fa; padding: 18px; margin-bottom: 15px; border-radius: 8px; }
         h3 { margin: 0 0 8px 0; font-size: 11px; color: #555; text-transform: uppercase; }
         
-        .table-wrap { width: 100%; overflow-x: auto; }
+        .table-wrap { width: 100%; overflow-x: auto; border-radius: 10px; border: 1px solid #eee; }
         table { width: 100%; border-collapse: collapse; min-width: 1000px; }
         th, td { border: 1px solid #eee; padding: 10px; text-align: left; vertical-align: top; font-size: 11px; }
-        th { background: #f4f4f4; }
         .hoje-row { background: #e8f5e9 !important; border: 2px solid var(--primary) !important; }
         
-        .btn-reroll { cursor: pointer; background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 2px 4px; font-size: 12px; float: right; margin-left: 5px; }
-        .segunda-opcao-tab { font-size: 10px; color: #e65100; margin-top: 4px; font-style: italic; font-weight: bold; border-top: 1px solid #eee; }
-        .edit-box { width: 100%; min-height: 70px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
-        .btn-notif { background: #1a1a1a; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; margin-bottom: 15px; font-size: 11px; cursor: pointer; }
+        .btn-reroll { cursor: pointer; background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 2px 5px; font-size: 14px; float: right; }
+        .btn-config { background: #1a1a1a; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; margin-bottom: 15px; font-weight: bold; font-size: 13px; }
+        .edit-box { width: 100%; min-height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        .segunda-opcao { font-size: 10px; color: #e65100; margin-top: 4px; font-style: italic; font-weight: bold; border-top: 1px dotted #ccc; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <button class="btn-notif" onclick="app.pedirPermissao()">🔔 ATIVAR ALERTAS NO CELULAR</button>
+    <button id="btn-perm" class="btn-config" onclick="app.ativarNotificacoes()">⚙️ ATIVAR NOTIFICAÇÕES E SOM</button>
 
     <div id="painel-alarme">
         <div id="msg-alarme"></div>
-        <button class="btn-ciente" onclick="app.pararAlarme()">CONFERIDO / PARAR SOM</button>
+        <button onclick="app.pararAlarme()" style="padding:12px; width:100%; border-radius:8px; border:none; font-weight:bold; margin-top:10px; cursor:pointer;">CONFERIDO</button>
     </div>
 
     <div class="nav-tabs">
-        <button id="tab-dia" class="tab active" onclick="app.mudarAba('dia', this)">Janela do Dia</button>
+        <button class="tab active" onclick="app.mudarAba('dia', this)">Janela do Dia</button>
         <button class="tab" onclick="app.mudarAba('semana', this)">Tabela Semana</button>
         <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
         <button class="tab" onclick="app.mudarAba('compras', this)">Lista Compras</button>
     </div>
-    <div id="app-view">Aguardando sincronização...</div>
+    <div id="app-view">A carregar dados...</div>
 </div>
 
 <script>
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+
 const app = {
     audioCtx: null, oscillator: null, loopSom: null, ultimoAlarme: null,
     base: {
@@ -73,15 +75,20 @@ const app = {
         frangos: ["Frango Assado", "Frango Grelhado", "Frango Ensopado", "Strogonoff"],
         carnes: ["Carne moída", "Bife acebolado", "Almôndegas", "Iscas de carne"],
         acompa: ["Puré", "Salada", "Couve", "Farofa", "Creme de milho"],
-        lanchesM: ["Banana", "Maçã", "Uva", "Melancia"],
-        lanchesT: ["Iogurte", "Bolo", "Pão de Queijo", "Pipoca", "Sanduíche"],
-        jantares: ["Sopa de Lentilha", "Omelete", "Canja", "Tapioca", "Caldo Verde"]
+        lanches: ["Banana", "Maçã", "Uva", "Melancia", "Iogurte", "Bolo", "Pão de Queijo"],
+        jantares: ["Sopa", "Omelete", "Canja", "Tapioca", "Caldo Verde"]
     },
 
     init() {
-        if (!localStorage.getItem("plano_final_v24")) this.gerar();
+        if (!localStorage.getItem("plano_vFinal_Gold")) this.gerar();
         this.mudarAba('dia');
-        setInterval(() => this.checarHorario(), 15000);
+        setInterval(() => this.verificarRelogio(), 15000);
+    },
+
+    ativarNotificacoes() {
+        Notification.requestPermission().then(p => { if(p === 'granted') alert('Notificações prontas!'); });
+        if(!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        document.getElementById('btn-perm').style.display = 'none';
     },
 
     gerar() {
@@ -94,151 +101,38 @@ const app = {
             plano[d] = {
                 cafe: c.t, isMingau: c.m, opcao2: c.s,
                 bebida: c.m ? "" : this.base.bebidas[i % 4],
-                lancheM: this.base.lanchesM[i % 4],
+                lancheM: this.base.lanches[i % 7],
                 arroz: this.base.arroz[i % 3],
                 feijao: (i < 4) ? f1 : f2,
                 proteina: (i % 2 === 0) ? this.base.frangos[i % 4] : this.base.carnes[i % 4],
                 acompa: this.base.acompa[i % 5],
-                lancheT: this.base.lanchesT[i % 5],
+                lancheT: this.base.lanches[(i+3) % 7],
                 jantar: this.base.jantares[i % 5]
             };
         });
-        localStorage.setItem("plano_final_v24", JSON.stringify(plano));
+        localStorage.setItem("plano_vFinal_Gold", JSON.stringify(plano));
     },
 
-    pedirPermissao() {
-        Notification.requestPermission();
-        if(!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    },
-
-    checarHorario() {
+    verificarRelogio() {
         const agora = new Date();
         const hm = agora.getHours().toString().padStart(2, '0') + ":" + agora.getMinutes().toString().padStart(2, '0');
-        const gatilhos = ["07:30", "13:00", "19:00", "21:00"];
-        if (gatilhos.includes(hm) && this.ultimoAlarme !== hm) {
+        if (["07:30", "13:00", "19:00", "21:00"].includes(hm) && this.ultimoAlarme !== hm) {
             this.ultimoAlarme = hm;
             this.dispararAlerta(hm);
         }
     },
 
     dispararAlerta(h) {
-        const plano = JSON.parse(localStorage.getItem("plano_final_v24"));
-        const diasNomes = ["DOMINGO","SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO"];
-        const hoje = diasNomes[new Date().getDay()];
-        const amanha = diasNomes[(new Date().getDay() + 1) % 7];
-        const d = plano[hoje];
-        const a = plano[amanha];
-
-        let msg = "";
-        if(h === "07:30") msg = `PREPARO ALMOÇO: ${d.arroz}, ${d.feijao}, ${d.proteina} e ${d.acompa}.`;
-        if(h === "13:00") msg = `COMPRA FRUTAS: Para Jantar, Café e Lanches.`;
-        if(h === "19:00") msg = `PADARIA: Itens para o Jantar e Café de amanhã (${a.cafe}).`;
-        if(h === "21:00") {
-            let molho = d.feijao !== a.feijao ? ` COLOCAR ${a.feijao} DE MOLHO!` : "";
-            msg = `NOITE: Organizar Café de amanhã (${a.cafe}).${molho}`;
-        }
-
-        document.getElementById("msg-alarme").innerHTML = `<h2>🔔 AVISO ${h}</h2><p>${msg}</p>`;
+        document.getElementById("msg-alarme").innerHTML = `<h2>🔔 ALERTA ${h}</h2><p>Hora de verificar as tarefas do cardápio!</p>`;
         document.getElementById("painel-alarme").style.display = "block";
-        
-        if (Notification.permission === 'granted') {
-            new Notification(`Cardápio: Alerta ${h}`, { body: msg });
-        }
+        if (Notification.permission === 'granted') { new Notification("Aviso de Horário", { body: `São ${h}. Verifique o seu plano!` }); }
         this.tocarSom();
     },
 
     tocarSom() {
         if(!this.audioCtx) this.audioCtx = new AudioContext();
-        this.oscillator = this.audioCtx.createOscillator();
-        const gain = this.audioCtx.createGain();
-        this.oscillator.connect(gain);
-        gain.connect(this.audioCtx.destination);
-        this.oscillator.start();
+        const osc = this.audioCtx.createOscillator();
+        const g = this.audioCtx.createGain();
+        osc.connect(g); g.connect(this.audioCtx.destination);
+        osc.start();
         this.loopSom = setInterval(() => {
-            gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
-            setTimeout(() => gain.gain.setValueAtTime(0, this.audioCtx.currentTime), 200);
-        }, 800);
-    },
-
-    pararAlarme() {
-        document.getElementById("painel-alarme").style.display = "none";
-        if(this.oscillator) { this.oscillator.stop(); clearInterval(this.loopSom); }
-    },
-
-    reroll(dia, campo) {
-        let plano = JSON.parse(localStorage.getItem("plano_final_v24"));
-        const rand = (arr) => arr[Math.floor(Math.random()*arr.length)];
-        if(campo === 'cafe') {
-            const c = rand(this.base.cafe);
-            plano[dia].cafe = c.t; plano[dia].isMingau = c.m; plano[dia].opcao2 = c.s;
-            plano[dia].bebida = c.m ? "" : rand(this.base.bebidas);
-        } else if(campo === 'almoco') {
-            plano[dia].proteina = rand([...this.base.frangos, ...this.base.carnes]);
-            plano[dia].acompa = rand(this.base.acompa);
-        } else if(campo === 'jantar') plano[dia].jantar = rand(this.base.jantares);
-        else if(campo === 'lancheM') plano[dia].lancheM = rand(this.base.lanchesM);
-        else if(campo === 'lancheT') plano[dia].lancheT = rand(this.base.lanchesT);
-        localStorage.setItem("plano_final_v24", JSON.stringify(plano));
-        this.mudarAba('semana');
-    },
-
-    mudarAba(aba, btn) {
-        const painel = document.getElementById("app-view");
-        const plano = JSON.parse(localStorage.getItem("plano_final_v24"));
-        if (btn) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-        }
-        const hojeIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
-        const diasNomes = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
-        const d = plano[diasNomes[hojeIdx]];
-
-        if (aba === 'dia') {
-            painel.innerHTML = `
-                <div class="bloco"><h3>☕ Café da Manhã</h3><p><b>${d.cafe}</b>${d.bebida ? '<br>• ' + d.bebida : ''}</p>${d.isMingau ? `<div class="segunda-opcao-tab">Opção Sólida: ${d.opcao2}</div>` : ''}</div>
-                <div class="bloco"><h3>🍎 Lanche M</h3><p>${d.lancheM}</p></div>
-                <div class="bloco"><h3>🍛 Almoço</h3><p>• ${d.arroz}<br>• ${d.feijao}<br>• ${d.proteina}<br>• ${d.acompa}</p></div>
-                <div class="bloco"><h3>🍪 Lanche T</h3><p>${d.lancheT}</p></div>
-                <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jantar}</p></div>
-            `;
-        } else if (aba === 'semana') {
-            let html = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>L. Manhã</th><th>Almoço</th><th>L. Tarde</th><th>Jantar</th></tr>';
-            diasNomes.forEach((dn, i) => {
-                const dia = plano[dn];
-                html += `<tr class="${i === hojeIdx ? 'hoje-row' : ''}">
-                    <td><b>${dn}</b></td>
-                    <td>${dia.cafe}<button class="btn-reroll" onclick="app.reroll('${dn}','cafe')">🎲</button>${dia.isMingau ? `<div class="segunda-opcao-tab">${dia.opcao2}</div>` : ''}</td>
-                    <td>${dia.lancheM}<button class="btn-reroll" onclick="app.reroll('${dn}','lancheM')">🎲</button></td>
-                    <td>• ${dia.arroz}<br>• ${dia.feijao}<br>• ${dia.proteina} + ${dia.acompa}<button class="btn-reroll" onclick="app.reroll('${dn}','almoco')">🎲</button></td>
-                    <td>${dia.lancheT}<button class="btn-reroll" onclick="app.reroll('${dn}','lancheT')">🎲</button></td>
-                    <td>${dia.jantar}<button class="btn-reroll" onclick="app.reroll('${dn}','jantar')">🎲</button></td>
-                </tr>`;
-            });
-            painel.innerHTML = html + '</table></div>';
-        } else if (aba === 'receitas') {
-            let html = '<h2>Ingredientes Permanentes</h2>';
-            [d.cafe, d.proteina, d.acompa, d.jantar, d.arroz, d.feijao].forEach(it => {
-                const salvo = localStorage.getItem("ing_"+it) || "";
-                html += `<div class="bloco"><h3>${it}</h3><textarea class="edit-box" oninput="localStorage.setItem('ing_${it}', this.value)">${salvo}</textarea></div>`;
-            });
-            painel.innerHTML = html;
-        } else if (aba === 'compras') {
-            let itens = new Set(["Sal", "Azeite"]);
-            diasNomes.forEach(dn => {
-                const dia = plano[dn];
-                itens.add(dia.lancheM); itens.add(dia.lancheT);
-                [dia.cafe, dia.proteina, dia.acompa, dia.jantar].forEach(p => {
-                    const ing = localStorage.getItem("ing_"+p);
-                    if(ing) ing.split(',').forEach(i => { if(i.trim()) itens.add(i.trim()); });
-                });
-            });
-            let html = '<h2>Lista de Compras</h2><div class="bloco">';
-            Array.from(itens).sort().forEach(it => html += `<div style="padding:10px; border-bottom:1px solid #eee"><input type="checkbox"> ${it}</div>`);
-            painel.innerHTML = html + '</div>';
-        }
-    }
-};
-window.onload = () => app.init();
-</script>
-</body>
-</html>
