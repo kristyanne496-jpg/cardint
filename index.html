@@ -3,26 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio Inteligente v23.1</title>
+    <title>Cardápio Inteligente v23.2</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
         body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
-        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         .nav-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e0e0e0; padding: 5px; border-radius: 10px; overflow-x: auto; }
         .tab { flex: 1; padding: 12px 8px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; background: transparent; font-size: 12px; white-space: nowrap; }
         .tab.active { background: var(--primary); color: white; }
         .bloco { border-left: 6px solid var(--primary); background: #f8f9fa; padding: 18px; margin-bottom: 15px; border-radius: 8px; }
         h3 { margin: 0 0 8px 0; font-size: 11px; color: #555; text-transform: uppercase; }
         .table-wrap { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        th, td { border: 1px solid #eee; padding: 12px; text-align: left; vertical-align: top; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        th, td { border: 1px solid #eee; padding: 10px; text-align: left; vertical-align: top; font-size: 11px; }
         th { background: #f4f4f4; }
         .hoje-row { background: #e8f5e9 !important; border: 2px solid var(--primary) !important; }
         .edit-box { width: 100%; min-height: 70px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
         .item-compra { display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid #f0f0f0; }
         .checked { text-decoration: line-through; color: #999; }
         .alerta-mingau { background: #fff3e0; border: 1px dashed #ff9800; padding: 10px; border-radius: 8px; margin-top: 8px; color: #e65100; font-size: 13px; font-weight: bold; }
-        .segunda-opcao-tab { font-size: 10px; color: #e65100; margin-top: 4px; font-style: italic; }
+        .segunda-opcao-tab { font-size: 10px; color: #e65100; margin-top: 4px; font-style: italic; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -34,7 +34,7 @@
         <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
         <button class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
     </div>
-    <div id="app-view">Carregando...</div>
+    <div id="app-view">Carregando plano semanal...</div>
 </div>
 
 <script>
@@ -59,7 +59,7 @@ const app = {
     },
 
     init() {
-        const salvo = localStorage.getItem("plano_v23_1");
+        const salvo = localStorage.getItem("plano_v23_2");
         if (!salvo) {
             this.gerar();
         } else {
@@ -87,13 +87,13 @@ const app = {
                 jantar: this.base.jantares[i % 5]
             };
         });
-        localStorage.setItem("plano_v23_1", JSON.stringify(plano));
+        localStorage.setItem("plano_v23_2", JSON.stringify(plano));
         this.mudarAba('dia');
     },
 
     mudarAba(aba, btn) {
         const painel = document.getElementById("app-view");
-        const plano = JSON.parse(localStorage.getItem("plano_v23_1"));
+        const plano = JSON.parse(localStorage.getItem("plano_v23_2"));
         if (btn) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
@@ -113,19 +113,21 @@ const app = {
                 <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jantar}</p></div>
             `;
         } else if (aba === 'semana') {
-            let html = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>Almoço</th><th>Jantar</th></tr>';
+            let html = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>L. Manhã</th><th>Almoço</th><th>L. Tarde</th><th>Jantar</th></tr>';
             diasNomes.forEach((dn, i) => {
                 const dia = plano[dn];
                 html += `<tr class="${i === hojeIdx ? 'hoje-row' : ''}">
                     <td><b>${dn}</b></td>
                     <td>${dia.cafe} ${dia.bebida ? '('+dia.bebida+')' : ''} ${dia.isMingau ? `<div class="segunda-opcao-tab">Alt: ${dia.opcao2}</div>` : ''}</td>
+                    <td>${dia.lancheM}</td>
                     <td>• ${dia.arroz}<br>• ${dia.feijao}<br>• ${dia.proteina} + ${dia.acompa}</td>
+                    <td>${dia.lancheT}</td>
                     <td>${dia.jantar}</td>
                 </tr>`;
             });
             painel.innerHTML = html + '</table></div>';
         } else if (aba === 'receitas') {
-            let html = '<h2>Ingredientes</h2>';
+            let html = '<h2>Ingredientes Permanentes</h2>';
             const itens = [d.cafe, d.arroz, d.feijao, d.proteina, d.acompa, d.jantar];
             itens.forEach(it => {
                 const salvo = localStorage.getItem("ing_"+it) || "";
@@ -143,7 +145,7 @@ const app = {
                     if(ing) ing.split(',').forEach(i => { if(i.trim()) itens.add(i.trim()); });
                 });
             });
-            let html = '<h2>Compras</h2><div class="bloco">';
+            let html = '<h2>Lista de Compras</h2><div class="bloco">';
             Array.from(itens).sort().forEach(it => {
                 html += `<label class="item-compra"><input type="checkbox" onclick="this.parentNode.classList.toggle('checked')"> ${it}</label>`;
             });
