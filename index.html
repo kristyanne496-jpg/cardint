@@ -3,38 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio Inteligente v16</title>
+    <title>Cardápio Inteligente v14</title>
     <style>
-        :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #ddd; padding: 5px; border-radius: 8px; overflow-x: auto; }
-        .tab { flex: 1; padding: 12px; text-align: center; border-radius: 6px; cursor: pointer; font-weight: bold; border: none; background: #eee; font-size: 14px; }
+        :root { --primary: #4CAF50; --bg: #f4f4f9; --text: #333; --accent: #ff9800; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); line-height: 1.4; }
+        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        
+        .nav-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #eee; padding: 5px; border-radius: 10px; }
+        .tab { flex: 1; padding: 12px 5px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; border: none; background: none; }
         .tab.active { background: var(--primary); color: white; }
-        .bloco { border-left: 4px solid var(--primary); background: #f1f1f1; padding: 12px; margin-bottom: 10px; border-radius: 4px; }
-        h3 { margin: 0 0 5px 0; font-size: 12px; color: #666; text-transform: uppercase; }
-        p { margin: 0; font-size: 16px; }
-        .table-wrapper { width: 100%; overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; font-size: 12px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: var(--primary); color: white; }
-        textarea { width: 100%; min-height: 200px; padding: 10px; box-sizing: border-box; font-family: inherit; }
-        .btn-reset { background: #ff4444; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+
+        .bloco { border-left: 5px solid var(--primary); background: #f9f9f9; padding: 15px; margin-bottom: 12px; border-radius: 5px; position: relative; }
+        .bloco h3 { margin: 0 0 5px 0; font-size: 0.85em; color: #666; text-transform: uppercase; }
+        
+        /* Estilo para edição */
+        .editavel { border: 1px dashed #ccc; padding: 10px; background: white; border-radius: 5px; min-height: 40px; outline: none; transition: 0.3s; }
+        .editavel:focus { border-color: var(--primary); background: #f0fff0; }
+        .aviso-edit { font-size: 10px; color: #999; display: block; margin-top: 5px; }
+
+        .table-wrapper { width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; min-width: 950px; }
+        th { background: var(--primary); color: white; padding: 10px; font-size: 11px; }
+        td { padding: 10px; border: 1px solid #eee; font-size: 11px; vertical-align: top; background: white; }
+        .hoje-col { background: #e8f5e9 !important; font-weight: bold; border: 2px solid var(--primary) !important; }
+        
+        .compras-item { display: inline-block; background: #eee; padding: 5px 10px; margin: 3px; border-radius: 15px; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="nav-tabs">
-        <button class="tab active" onclick="app.aba('dia', this)">Hoje</button>
-        <button class="tab" onclick="app.aba('semana', this)">Tabela</button>
-        <button class="tab" onclick="app.aba('receitas', this)">Ingredientes</button>
-        <button class="tab" onclick="app.aba('compras', this)">Compras</button>
+        <button class="tab active" onclick="app.mudarAba('dia', this)">Hoje</button>
+        <button class="tab" onclick="app.mudarAba('semana', this)">Tabela</button>
+        <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
+        <button class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
     </div>
-    
-    <div id="conteudo">
-        <p>A carregar... se demorar, clique no botão abaixo:</p>
-        <button onclick="app.reset()" class="btn-reset">Forçar Carregamento (Reset)</button>
+    <div id="conteudo-principal">Sincronizando cardápio v14...</div>
+</div>
+
+<script>
+const app = {
+    banco: {
+        cafe: [
+            { t: "Pão com ovo", c: "sol", i: "Pão, Ovos, Manteiga" },
+            { t: "Pão com manteiga", c: "sol", i: "Pão francês, Manteiga" },
+            { t: "Mingau de tapioca", c: "liq", i: "Tapioca granulada, Leite, Açúcar" },
+            { t: "Mingau de milho", c: "liq", i: "Milho, Leite, Canela" },
+            { t: "Cuscuz com ovo", c: "sol", i: "Flocão de milho, Ovos, Manteiga" },
+            { t: "Pão com queijo e presunto", c: "sol", i: "Pão, Queijo, Presunto" },
+            { t: "Aipim cozido", c: "sol", i: "Aipim, Sal, Manteiga" },
+            { t: "Batata doce cozida", c: "sol", i: "Batata doce" },
+            { t: "Tapioca com coco", c: "sol", i: "Goma de tapioca, Coco ralado" }
+        ],
+        almoco: {
+            arroz: ["Arroz Branco", "Arroz com Cenoura"],
+            feijoes: ["Feijão carioca", "Feijão preto", "Feijão fradinho"],
+            proteinas: ["Frango assado", "Carne moída", "Bife no molho", "Peixe frito", "Fígado acebolado", "Almôndegas"],
+            acompa: ["Puré de batata", "Salada de maionese", "Couve refogada", "Farofa", "Creme de milho", "Vinagrete"]
+        },
+        jantar: [
+            { t: "Sopa de legumes", c: "liq", i: "Legumes, Macarrão" },
+            { t: "Arroz com ovo", c: "sol", i: "Arroz, Ovos" },
+            { t: "Pizza caseira", c: "sol", i: "Massa, Queijo, Molho" },
+            { t: "Cuscuz temperado", c: "sol", i: "Milho, Calabresa, Ovos" },
+            { t: "Tapioca de frango", c: "sol", i: "Goma, Frango desfiado" },
+            { t: "Hambúrguer", c: "sol", i: "Pão, Carne, Alface" },
+            { t: "Caldo de canoa", c: "liq", i: "Aipim, Carne seca" }
+        ],
+        bebidasCafe: ["Café puro", "Leite", "Chá de Capim Santo", "Suco de Laranja"],
+        lanchesM: ["Banana", "Maçã", "Uva", "Melancia", "Pera", "Morango", "Manga", "Abacaxi", "Kiwi"],
+        lanchesT: ["Iogurte Natural", "Bolo de Cenoura", "Pão de Queijo", "Pipoca", "Sanduíche Natural", "Vitamina", "Bolacha Maria", "Salada de Frutas"]
+    },
+
+    shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[array[j]]] = [array[j], array[i]];
+        }
+        return array;
+    },
+
+    gerarTudo() {
+        const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
+        let plano = {};
+        
+        // Embaralha as listas para garantir 0 repetição
+        let dCafe = this.shuffle([...this.banco.cafe]);
+        let dLM = this.shuffle([...this.banco.lanchesM]);
+        let dLT = this.shuffle([...this.banco.lanchesT]);
+        let dJan = this.shuffle([...this.banco.jantar]);
+        let dProt = this.shuffle([...this.banco.almoco.proteinas]);
+        let dAcom = this.shuffle([...this.banco.almoco.acompa]);
+
+        dias.forEach((d, index) => {
+            const itemC = dCafe[index];
+            const itemJ = dJan[index];
+            const isFDS = (d === "SÁBADO" || d === "DOMINGO");
+
+            // Bebida única (Lógica reforçada)
+            const bebC = itemC.c === "liq" ? "" : "• " + this.banco.bebidasCafe[Math.floor(Math.random()*4)];
+            
+            // Regra do Fígado
+            let pAlmoco = dProt[index % dProt.length];
+            if (isFDS && pAlmoco.includes("Fígado")) pAlmoco = "Frango Grelhado";
+
+            plano[d] = {
+                cafe: { txt: `${itemC.t}<br>${bebC}`, ing: itemC.i, liq: itemC.c === "liq" },
+                lancheM: dLM[index],
+                almoco: {
+                    txt: `• ${this.banco.almoco.arroz[index % 2]}<br>• ${this.banco.almoco.feijoes[index % 3]}<br>• ${pAlmoco}<br>• ${dAcom[index % dAcom.length]}<br>• 🥤 Suco`,
+                    ing: `Arroz, Feijão, ${pAlmoco}, Acompanhamento, Frutas para suco`,
+                    sob: isFDS ? "🍮 Sobremesa" : ""
+                },
+                lancheT: dLT[index],
+                jantar: { txt: `${itemJ.t}${itemJ.c === "liq" ? "" : "<br>• 🥤 Suco"}`, ing: itemJ.i }
+            };
+        });
+
+        localStorage.setItem("plano_v14", JSON.stringify(plano));
+        return plano;
+    },
+
+    mudarAba(aba, btn) {
+        const container = document.getElementById("conteudo-principal");
+        if (btn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        let plano = JSON.parse(localStorage.getItem("plano_v14")) || this.gerarTudo();
+        const diasNomes = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
+        const hojeIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+        const diaNome = diasNomes[hojeIdx];
+        const d = plano[diaNome];
+
+        if (aba === 'dia') {
+            container.innerHTML = `
+                <div class="bloco"><h3>☕ Café</h3><p>${d.cafe.txt}</p>${d.cafe.liq ? '<span class="opcional">Dica: Se preferir, troque por Pão com Café</span>' : ''}</div>
+                <div class="bloco"><h3>🍎 Lanche M</h3><p>${d.lancheM}</p></div>
+                <div class="bloco"><h3>🍛 Almoço</h3><p>${d.almoco.txt}</p><b>${d.almoco.sob}</b></div>
+                <div class="bloco"><h3>🍪 Lanche T</h3><p>${d.lancheT}</p></div>
+                <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jantar.txt}</p></div>
+            `;
+        } 
+        else if (aba === 'semana') {
+            let html = `<div class="table-wrapper"><table><tr><th>Refeição</th>`;
+            diasNomes.forEach((dn, i) => html += `<th class="${i===hojeIdx?'hoje-col':''}">${dn}</th>`);
+            html += `</tr>`;
+            const refs = [{n:"Café",k:"cafe"},{n:"L. Manhã",k:"lancheM"},{n:"Almoço",k:"almoco"},{n:"L. Tarde",k:"lancheT"},{n:"Jantar",k:"jantar"}];
+            refs.forEach(r => {
+                html += `<tr><td style="font-weight:bold; background:#f9f9f9">${r.n}</td>`;
+                diasNomes.forEach((dn, i) => {
+                    let dado = plano[dn][r.k];
+                    html += `<td class="${i===hojeIdx?'hoje-col':''}">${dado.txt || dado}</td>`;
+                });
+                html += `</tr>`;
+            });
+            container.innerHTML = html + `</table></div>`;
+        }
+        else if (aba === 'receitas') {
+            container.innerHTML = `
+                <h2>Ingredientes para Hoje (${diaNome})</h2>
+                <div class="bloco"><h3>🛒 O que usar (Clique para editar)</h3>
+                    <div class="editavel" contenteditable="true">
+                        <b>CAFÉ:</b> ${d.cafe.ing}<br><br>
+                        <b>ALMOÇO:</b> ${d.almoco.ing}<br><br>
+                        <b>JANTAR:</b> ${d.jantar.ing}<br><br>
+                        <b>EXTRAS:</b> ${d.lancheM}, ${d.lancheT}
+                    </div>
+                    <small class="aviso-edit">Você pode apagar ou escrever novos itens acima.</small>
+                </div>
+            `;
+        }
+        else if (aba === 'compras') {
+            let todos = [];
+            diasNomes.forEach(dn => {
+                todos.push(plano[dn].cafe.ing, plano[dn].lancheM, plano[dn].lancheT, plano[dn].jantar.ing);
+            });
+            let unique = [...new Set(todos.join(', ').split(', '))].sort();
+            container.innerHTML = `<h2>Compras da Semana</h2><div class="bloco">${unique.map(i => `<span class="compras-item">${i}</span>`).join('')}</div>`;
+        }
+    }
+};
+
+window.onload = () => app.mudarAba('dia');
+</script>
+</body>
+</html>        <button onclick="app.reset()" class="btn-reset">Forçar Carregamento (Reset)</button>
     </div>
 </div>
 
