@@ -8,42 +8,62 @@
     <meta name="theme-color" content="#2e7d32">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048953.png">
     <link rel="manifest" href="manifest.json">
-    <title>Cardápio v24.1</title>
+    <title>Cardápio v24.1 Custom</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 10px 10px 10px; color: var(--text); }
         .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); min-height: 92vh; }
+        
         #painel-alarme { display: none; background: #d32f2f; color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; border: 4px solid #b71c1c; animation: flash 1s infinite; }
         @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        
         .nav-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #e0e0e0; padding: 5px; border-radius: 12px; overflow-x: auto; }
         .tab { flex: 1; padding: 12px 8px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; background: transparent; font-size: 11px; white-space: nowrap; }
         .tab.active { background: var(--primary); color: white; }
+        
         .bloco { border-left: 6px solid var(--primary); background: #f8f9fa; padding: 18px; margin-bottom: 15px; border-radius: 8px; }
         h3 { margin: 0 0 8px 0; font-size: 11px; color: #555; text-transform: uppercase; }
+        
         .table-wrap { width: 100%; overflow-x: auto; border: 1px solid #eee; border-radius: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th, td { border: 1px solid #eee; padding: 10px; text-align: left; vertical-align: top; font-size: 11px; }
         .hoje-row { background: #e8f5e9 !important; border: 2px solid var(--primary) !important; }
+        
         .btn-reroll { cursor: pointer; background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 2px 5px; font-size: 14px; float: right; }
-        .btn-config { background: #1a1a1a; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; margin-bottom: 15px; font-weight: bold; font-size: 13px; cursor: pointer; }
-        .edit-box { width: 100%; min-height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        .segunda-opcao { font-size: 10px; color: #e65100; margin-top: 4px; font-style: italic; font-weight: bold; border-top: 1px dotted #ccc; }
+        .btn-acao { background: #1a1a1a; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; margin-top: 10px; font-weight: bold; cursor: pointer; }
+        .btn-print { background: #007bff; margin-bottom: 15px; }
+        
+        .edit-box { width: 100%; min-height: 60px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 5px; font-family: inherit; }
+        .segunda-opcao { font-size: 10px; color: #e65100; margin-top: 4px; font-style: italic; font-weight: bold; }
+
+        @media print {
+            .nav-tabs, .btn-reroll, .btn-acao, #btn-perm, #painel-alarme { display: none !important; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; border: none; }
+            table { min-width: 100%; }
+            th, td { font-size: 10pt; }
+            .bloco { border-left: 2px solid #000; page-break-inside: avoid; }
+        }
     </style>
 </head>
 <body>
+
 <div class="container">
-    <button id="btn-perm" class="btn-config" onclick="app.ativarNotificacoes()">🔔 ATIVAR ALERTAS E APARÊNCIA APP</button>
+    <button id="btn-perm" class="btn-acao" onclick="app.ativarNotificacoes()">🔔 ATIVAR ALERTAS E MODO APP</button>
+
     <div id="painel-alarme">
         <div id="msg-alarme"></div>
-        <button onclick="app.pararAlarme()" style="padding:12px; width:100%; border-radius:8px; border:none; font-weight:bold; margin-top:10px;">CONFERIDO</button>
+        <button onclick="app.pararAlarme()" class="btn-acao">CONFERIDO</button>
     </div>
+
     <div class="nav-tabs">
-        <button class="tab active" onclick="app.mudarAba('dia', this)">Janela do Dia</button>
-        <button class="tab" onclick="app.mudarAba('semana', this)">Tabela Semana</button>
-        <button class="tab" onclick="app.mudarAba('receitas', this)">Ingredientes</button>
-        <button class="tab" onclick="app.mudarAba('compras', this)">Lista Compras</button>
+        <button class="tab active" onclick="app.mudarAba('dia', this)">Hoje</button>
+        <button class="tab" onclick="app.mudarAba('semana', this)">Semana</button>
+        <button class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
+        <button class="tab" onclick="app.mudarAba('config', this)">⚙️ Base Pratos</button>
     </div>
-    <div id="app-view">Carregando...</div>
+
+    <div id="app-view">Carregando dados...</div>
 </div>
 
 <script>
@@ -51,52 +71,151 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 
 const app = {
     audioCtx: null, oscillator: null, loopSom: null, ultimoAlarme: null,
-    base: {
-        cafe: [
-            { t: "Pão com ovo", m: false, s: "" },
-            { t: "Cuscuz com ovo", m: false, s: "" },
-            { t: "Mingau de tapioca", m: true, s: "Pão com Manteiga e Café" },
-            { t: "Mingau de milho", m: true, s: "Pão com Queijo e Café" },
-            { t: "Aipim cozido", m: false, s: "" }
-        ],
-        bebidas: ["Café puro", "Suco de Laranja", "Chá", "Suco de Abacaxi"],
-        arroz: ["Arroz Branco", "Arroz Integral", "Arroz com Cenoura"],
-        feijao: ["Feijão Carioca", "Feijão Preto", "Feijão Fradinho"],
-        frangos: ["Frango Assado", "Frango Grelhado", "Frango Ensopado", "Strogonoff"],
-        carnes: ["Carne moída", "Bife acebolado", "Almôndegas", "Iscas de carne"],
-        acompa: ["Puré", "Salada", "Couve", "Farofa", "Creme de milho"],
-        lanches: ["Banana", "Maçã", "Uva", "Melancia", "Iogurte", "Bolo", "Pão de Queijo"],
-        jantares: ["Sopa", "Omelete", "Canja", "Tapioca", "Caldo Verde"]
+    
+    // Base inicial (será substituída pelo que você digitar)
+    basePadrao: {
+        cafe: "Pão com ovo\nCuscuz com ovo\nAipim cozido",
+        mingau: "Mingau de tapioca|Pão com Manteiga e Café\nMingau de milho|Pão com Queijo e Café",
+        bebidas: "Café puro\nSuco de Laranja\nChá\nSuco de Abacaxi",
+        arroz: "Arroz Branco\nArroz Integral\nArroz com Cenoura",
+        feijao: "Feijão Carioca\nFeijão Preto\nFeijão Fradinho",
+        proteinas: "Frango Assado\nFrango Grelhado\nFrango Ensopado\nCarne moída\nBife acebolado\nAlmôndegas",
+        acompa: "Puré\nSalada\nCouve\nFarofa\nCreme de milho",
+        lanches: "Banana\nMaçã\nUva\nMelancia\nIogurte\nBolo\nPão de Queijo",
+        jantares: "Sopa\nOmelete\nCanja\nTapioca\nCaldo Verde"
     },
+
     init() {
-        if (!localStorage.getItem("db_v24_1")) this.gerar();
+        if (!localStorage.getItem("base_custom")) {
+            localStorage.setItem("base_custom", JSON.stringify(this.basePadrao));
+        }
+        if (!localStorage.getItem("db_v24_1")) this.gerarSemana();
         this.mudarAba('dia');
         setInterval(() => this.verificarRelogio(), 15000);
     },
-    gerar() {
+
+    getLista(chave) {
+        const base = JSON.parse(localStorage.getItem("base_custom"));
+        return base[chave].split('\n').filter(x => x.trim() !== "");
+    },
+
+    gerarSemana() {
         const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
         let p = {};
-        const f1 = this.base.feijao[Math.floor(Math.random()*3)];
-        const f2 = this.base.feijao[Math.floor(Math.random()*3)];
+        const base = JSON.parse(localStorage.getItem("base_custom"));
+        
+        const listaCafe = this.getLista('cafe');
+        const listaMingau = base.mingau.split('\n').filter(x => x.trim() !== "");
+        const listaBeb = this.getLista('bebidas');
+        const listaPro = this.getLista('proteinas');
+        const listaAco = this.getLista('acompa');
+        const listaArr = this.getLista('arroz');
+        const listaFei = this.getLista('feijao');
+
         dias.forEach((d, i) => {
-            const c = this.base.cafe[i % 5];
+            const ehMingau = Math.random() > 0.6; // 40% chance de mingau
+            let cafeFinal, segundaOpcao = "", mingauBool = false;
+
+            if(ehMingau && listaMingau.length > 0) {
+                const sort = listaMingau[Math.floor(Math.random()*listaMingau.length)].split('|');
+                cafeFinal = sort[0]; segundaOpcao = sort[1] || ""; mingauBool = true;
+            } else {
+                cafeFinal = listaCafe[Math.floor(Math.random()*listaCafe.length)];
+            }
+
             p[d] = {
-                cafe: c.t, isM: c.m, s: c.s,
-                beb: c.m ? "" : this.base.bebidas[i % 4],
-                lM: this.base.lanches[i % 7],
-                arr: this.base.arroz[i % 3],
-                fei: (i < 4) ? f1 : f2,
-                pro: (i % 2 === 0) ? this.base.frangos[i % 4] : this.base.carnes[i % 4],
-                aco: this.base.acompa[i % 5],
-                lT: this.base.lanches[(i+3) % 7],
-                jan: this.base.jantares[i % 5]
+                cafe: cafeFinal, isM: mingauBool, s: segundaOpcao,
+                beb: mingauBool ? "" : listaBeb[Math.floor(Math.random()*listaBeb.length)],
+                lM: this.getLista('lanches')[Math.floor(Math.random()*7)],
+                arr: listaArr[Math.floor(Math.random()*listaArr.length)],
+                fei: listaFei[i < 4 ? 0 : 1] || listaFei[0],
+                pro: listaPro[Math.floor(Math.random()*listaPro.length)],
+                aco: listaAco[Math.floor(Math.random()*listaAco.length)],
+                lT: this.getLista('lanches')[Math.floor(Math.random()*7)],
+                jan: this.getLista('jantares')[Math.floor(Math.random()*5)]
             };
         });
         localStorage.setItem("db_v24_1", JSON.stringify(p));
     },
+
+    reroll(dia, campo) {
+        let p = JSON.parse(localStorage.getItem("db_v24_1"));
+        const base = JSON.parse(localStorage.getItem("base_custom"));
+        const rand = (arr) => arr[Math.floor(Math.random()*arr.length)];
+
+        if(campo === 'cafe') {
+            const ehM = Math.random() > 0.5;
+            if(ehM) {
+                const s = rand(base.mingau.split('\n')).split('|');
+                p[dia].cafe = s[0]; p[dia].isM = true; p[dia].s = s[1]; p[dia].beb = "";
+            } else {
+                p[dia].cafe = rand(this.getLista('cafe')); p[dia].isM = false; p[dia].beb = rand(this.getLista('bebidas'));
+            }
+        } else if(campo === 'almoco') {
+            p[dia].pro = rand(this.getLista('proteinas'));
+            p[dia].aco = rand(this.getLista('acompa'));
+        }
+        localStorage.setItem("db_v24_1", JSON.stringify(p));
+        this.mudarAba('semana');
+    },
+
+    salvarBase() {
+        let novaBase = {};
+        Object.keys(this.basePadrao).forEach(key => {
+            novaBase[key] = document.getElementById('input-'+key).value;
+        });
+        localStorage.setItem("base_custom", JSON.stringify(novaBase));
+        alert("Lista salva! Os próximos sorteios usarão esses pratos.");
+    },
+
+    mudarAba(aba, btn) {
+        if (btn) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); }
+        const p = JSON.parse(localStorage.getItem("db_v24_1"));
+        const view = document.getElementById("app-view");
+        const hojeIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+        const nomes = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
+        const d = p[nomes[hojeIdx]];
+
+        if (aba === 'dia') {
+            view.innerHTML = `
+                <div class="bloco"><h3>☕ Café</h3><b>${d.cafe}</b>${d.beb ? '<br>+ '+d.beb : ''}${d.isM ? '<div class="segunda-opcao">'+d.s+'</div>' : ''}</div>
+                <div class="bloco"><h3>🍛 Almoço</h3>${d.arr}, ${d.fei}, ${d.pro} + ${d.aco}</div>
+                <div class="bloco"><h3>🍪 Lanches</h3>M: ${d.lM} | T: ${d.lT}</div>
+                <div class="bloco"><h3>🌙 Jantar</h3>${d.jan}</div>`;
+        } else if (aba === 'semana') {
+            let h = '<button class="btn-acao btn-print" onclick="window.print()">🖨️ Imprimir Cardápio</button><div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>Almoço</th><th>Lanches</th><th>Jantar</th></tr>';
+            nomes.forEach((n, i) => {
+                const dia = p[n];
+                h += `<tr class="${i===hojeIdx?'hoje-row':''}">
+                    <td><b>${n}</b></td>
+                    <td>${dia.cafe} ${dia.isM ? '<br><i>'+dia.s+'</i>' : '<br>+ '+dia.beb} <button class="btn-reroll" onclick="app.reroll('${n}','cafe')">🎲</button></td>
+                    <td>${dia.pro}<br>+ ${dia.aco} <button class="btn-reroll" onclick="app.reroll('${n}','almoco')">🎲</button></td>
+                    <td>${dia.lM} / ${dia.lT}</td>
+                    <td>${dia.jan}</td></tr>`;
+            });
+            view.innerHTML = h + '</table></div>';
+        } else if (aba === 'config') {
+            const base = JSON.parse(localStorage.getItem("base_custom"));
+            let h = '<h3>⚙️ Edite sua base de pratos</h3><p style="font-size:10px">Separe por linha. No mingau, use | para a segunda opção sólida.</p>';
+            Object.keys(base).forEach(key => {
+                h += `<b>${key.toUpperCase()}:</b><textarea id="input-${key}" class="edit-box">${base[key]}</textarea><br><br>`;
+            });
+            h += `<button class="btn-acao" onclick="app.salvarBase()">💾 SALVAR ALTERAÇÕES</button>
+                  <button class="btn-acao" style="background:red" onclick="app.gerarSemana(); app.mudarAba('semana');">🎲 NOVO SORTEIO SEMANAL</button>`;
+            view.innerHTML = h;
+        } else if (aba === 'compras') {
+            let itens = new Set(["Arroz", "Feijão", "Café", "Açúcar", "Óleo"]);
+            nomes.forEach(n => { itens.add(p[n].lM); itens.add(p[n].lT); itens.add(p[n].aco); });
+            let h = '<button class="btn-acao btn-print" onclick="window.print()">🖨️ Imprimir Lista</button><h3>🛒 Lista de Compras</h3><div class="bloco">';
+            Array.from(itens).sort().forEach(it => h += `<div style="padding:8px; border-bottom:1px solid #eee"><input type="checkbox"> ${it}</div>`);
+            view.innerHTML = h + '</div>';
+        }
+    },
+
+    // Funções de Alerta (Mantidas da v24.1)
     ativarNotificacoes() {
         Notification.requestPermission();
-        if(!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         document.getElementById('btn-perm').style.display = 'none';
     },
     verificarRelogio() {
@@ -107,12 +226,11 @@ const app = {
         }
     },
     dispararAlerta(h) {
-        document.getElementById("msg-alarme").innerHTML = `<h2>🔔 ALERTA ${h}</h2><p>Hora de conferir o cardápio!</p>`;
+        document.getElementById("msg-alarme").innerHTML = `<h2>🔔 ALERTA ${h}</h2><p>Verifique o cardápio!</p>`;
         document.getElementById("painel-alarme").style.display = "block";
         this.tocarSom();
     },
     tocarSom() {
-        if(!this.audioCtx) this.audioCtx = new AudioContext();
         const osc = this.audioCtx.createOscillator();
         const g = this.audioCtx.createGain();
         osc.connect(g); g.connect(this.audioCtx.destination);
@@ -126,61 +244,6 @@ const app = {
     pararAlarme() {
         document.getElementById("painel-alarme").style.display = "none";
         if(this.oscillator) { this.oscillator.stop(); clearInterval(this.loopSom); }
-    },
-    reroll(dia, campo) {
-        let p = JSON.parse(localStorage.getItem("db_v24_1"));
-        const rand = (a) => a[Math.floor(Math.random()*a.length)];
-        if(campo==='cafe'){ 
-            const c = rand(this.base.cafe); p[dia].cafe=c.t; p[dia].isM=c.m; p[dia].s=c.s; p[dia].beb=c.m?"":rand(this.base.bebidas);
-        } else if(campo==='almoco'){ 
-            p[dia].pro=rand([...this.base.frangos, ...this.base.carnes]); p[dia].aco=rand(this.base.acompa); 
-        } else if(campo==='lancheM'){ p[dia].lM=rand(this.base.lanches);
-        } else if(campo==='lancheT'){ p[dia].lT=rand(this.base.lanches);
-        } else if(campo==='jantar'){ p[dia].jan=rand(this.base.jantares); }
-        localStorage.setItem("db_v24_1", JSON.stringify(p));
-        this.mudarAba('semana');
-    },
-    mudarAba(aba, btn) {
-        if (btn) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); }
-        const p = JSON.parse(localStorage.getItem("db_v24_1"));
-        const painel = document.getElementById("app-view");
-        const hojeIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
-        const nomes = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
-        const d = p[nomes[hojeIdx]];
-
-        if (aba === 'dia') {
-            painel.innerHTML = `
-                <div class="bloco"><h3>☕ Café</h3><p><b>${d.cafe}</b>${d.beb ? '<br>• '+d.beb : ''}</p>${d.isM ? `<div class="segunda-opcao">Opção sólida: ${d.s}</div>` : ''}</div>
-                <div class="bloco"><h3>🍎 Lanche M</h3><p>${d.lM}</p></div>
-                <div class="bloco"><h3>🍛 Almoço</h3><p>• ${d.arr}<br>• ${d.fei}<br>• ${d.pro}<br>• ${d.aco}</p></div>
-                <div class="bloco"><h3>🍪 Lanche T</h3><p>${d.lT}</p></div>
-                <div class="bloco"><h3>🌙 Jantar</h3><p>${d.jan}</p></div>`;
-        } else if (aba === 'semana') {
-            let h = '<div class="table-wrap"><table><tr><th>Dia</th><th>Café</th><th>L.M</th><th>Almoço</th><th>L.T</th><th>Jantar</th></tr>';
-            nomes.forEach((n, i) => {
-                const dia = p[n];
-                h += `<tr class="${i===hojeIdx?'hoje-row':''}"><td><b>${n}</b></td>
-                    <td>${dia.cafe}<button class="btn-reroll" onclick="app.reroll('${n}','cafe')">🎲</button>${dia.isM?`<div class="segunda-opcao">${dia.s}</div>`:''} ${dia.beb ? '<br>+ '+dia.beb : ''}</td>
-                    <td>${dia.lM}<button class="btn-reroll" onclick="app.reroll('${n}','lancheM')">🎲</button></td>
-                    <td>${dia.arr}, ${dia.fei}, ${dia.pro} + ${dia.aco}<button class="btn-reroll" onclick="app.reroll('${n}','almoco')">🎲</button></td>
-                    <td>${dia.lT}<button class="btn-reroll" onclick="app.reroll('${n}','lancheT')">🎲</button></td>
-                    <td>${dia.jan}<button class="btn-reroll" onclick="app.reroll('${n}','jantar')">🎲</button></td></tr>`;
-            });
-            painel.innerHTML = h + '</table></div>';
-        } else if (aba === 'receitas') {
-            let h = '<h2>Ingredientes Permanentes</h2>';
-            [d.cafe, d.pro, d.aco, d.jan].forEach(it => {
-                const s = localStorage.getItem("ing_"+it) || "";
-                h += `<div class="bloco"><h3>${it}</h3><textarea class="edit-box" oninput="localStorage.setItem('ing_${it}', this.value)">${s}</textarea></div>`;
-            });
-            painel.innerHTML = h;
-        } else if (aba === 'compras') {
-            let h = '<h2>Lista de Compras</h2><div class="bloco">';
-            let itens = new Set(["Arroz", "Feijão", "Óleo", "Sal"]);
-            nomes.forEach(n => { itens.add(p[n].lM); itens.add(p[n].lT); });
-            Array.from(itens).sort().forEach(it => h += `<div style="padding:10px; border-bottom:1px solid #eee"><input type="checkbox"> ${it}</div>`);
-            painel.innerHTML = h + '</div>';
-        }
     }
 };
 window.onload = () => app.init();
