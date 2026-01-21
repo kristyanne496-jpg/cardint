@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#2e7d32">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048953.png">
     <link rel="manifest" href="manifest.json">
-    <title>Cardápio Inteligente v25.1</title>
+    <title>Cardápio Inteligente v25.2</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; --accent: #e65100; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 10px 10px 10px; color: var(--text); }
@@ -25,6 +25,9 @@
         .btn-sorteio { background: #fff; border: 1px solid #ccc; padding: 2px 5px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 5px; }
         .btn-acao { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin: 5px 0; }
         .edit-box { width: 100%; min-height: 50px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin: 5px 0; font-family: inherit; box-sizing: border-box; }
+        .check-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+        .check-item input { width: 20px; height: 20px; }
+        .done { text-decoration: line-through; opacity: 0.5; }
         .detalhe-semana { font-size: 10px; color: #555; margin-top: 3px; display: block; line-height: 1.2; }
         @media print { .nav-tabs, .btn-acao, .btn-sorteio { display: none !important; } }
     </style>
@@ -32,19 +35,20 @@
 <body>
 <div class="container">
     <div class="nav-tabs">
-        <button class="tab active" onclick="app.mudarAba('dia', this)">Hoje</button>
-        <button class="tab" onclick="app.mudarAba('tarefas', this)">Tarefas</button>
-        <button class="tab" onclick="app.mudarAba('semana', this)">Semana</button>
-        <button class="tab" onclick="app.mudarAba('receitas', this)">Receitas</button>
-        <button class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
-        <button class="tab" onclick="app.mudarAba('pratos', this)">Pratos</button>
-        <button class="tab" onclick="app.mudarAba('notif', this)">Notif.</button>
+        <button id="tab-dia" class="tab active" onclick="app.mudarAba('dia', this)">Hoje</button>
+        <button id="tab-tarefas" class="tab" onclick="app.mudarAba('tarefas', this)">Tarefas</button>
+        <button id="tab-semana" class="tab" onclick="app.mudarAba('semana', this)">Semana</button>
+        <button id="tab-receitas" class="tab" onclick="app.mudarAba('receitas', this)">Receitas</button>
+        <button id="tab-compras" class="tab" onclick="app.mudarAba('compras', this)">Compras</button>
+        <button id="tab-pratos" class="tab" onclick="app.mudarAba('pratos', this)">Pratos</button>
+        <button id="tab-notif" class="tab" onclick="app.mudarAba('notif', this)">Notif.</button>
     </div>
-    <div id="app-view">Carregando...</div>
+    <div id="app-view">Sincronizando dados...</div>
 </div>
 
 <script>
 const app = {
+    abaAtual: 'dia',
     db: JSON.parse(localStorage.getItem('v25_db')) || {
         config_pratos: {
             cafe: "Pão com ovo\nCuscuz com carne\nAipim cozido",
@@ -63,10 +67,13 @@ const app = {
 
     init() {
         if (Object.keys(this.db.semana).length === 0) this.gerarSemana();
-        this.mudarAba('dia');
+        this.render();
     },
 
-    salvar() { localStorage.setItem('v25_db', JSON.stringify(this.db)); },
+    salvar() { 
+        localStorage.setItem('v25_db', JSON.stringify(this.db));
+        this.render(); // Força atualização da tela sempre que salvar
+    },
 
     rand(key) {
         const list = this.db.config_pratos[key].split('\n').filter(x => x.trim());
@@ -89,7 +96,6 @@ const app = {
             jan: this.rand('jantares'), bebJ: this.rand('bebidas')
         };
         this.salvar();
-        this.mudarAba('semana');
     },
 
     gerarSemana() {
@@ -97,12 +103,20 @@ const app = {
     },
 
     mudarAba(aba, btn) {
-        if (btn) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); }
+        this.abaAtual = aba;
+        if (btn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+        }
+        this.render();
+    },
+
+    render() {
         const view = document.getElementById('app-view');
         const hoje = ["DOMINGO","SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO"][new Date().getDay()];
-        const d = this.db.semana[hoje] || this.db.semana["SEGUNDA"];
+        const d = this.db.semana[hoje.toUpperCase()] || this.db.semana["SEGUNDA"];
 
-        if (aba === 'dia') {
+        if (this.abaAtual === 'dia') {
             view.innerHTML = `
                 <h3>🍴 Hoje (${hoje})</h3>
                 <div class="bloco"><h3>☕ Café</h3><b>${d.cafe}</b> ${d.bebC ? '+ '+d.bebC : ''}${d.isM ? '<div style="color:var(--accent)">'+d.s+'</div>' : ''}</div>
@@ -111,10 +125,10 @@ const app = {
                 <div class="bloco"><h3>🍪 Lanche T</h3>${d.lT}</div>
                 <div class="bloco"><h3>🌙 Jantar</h3>${d.jan} + ${d.bebJ}</div>`;
         } 
-        else if (aba === 'semana') {
+        else if (this.abaAtual === 'semana') {
             const nomes = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
             let h = `<h2>📅 Visão da Semana</h2><button class="btn-acao" onclick="window.print()">🖨️ Imprimir</button><div class="table-wrap"><table><tr><th>Refeição</th>`;
-            nomes.forEach(n => h += `<th class="${n===hoje?'hoje-row':''}"> ${n} <button class="btn-sorteio" onclick="app.sortearDia('${n}')">🎲</button></th>`);
+            nomes.forEach(n => h += `<th class="${n===hoje.toUpperCase()?'hoje-row':''}"> ${n} <button class="btn-sorteio" onclick="app.sortearDia('${n}')">🎲</button></th>`);
             h += `</tr>`;
             
             const config = [
@@ -132,35 +146,28 @@ const app = {
             });
             view.innerHTML = h + `</table></div>`;
         }
-        else if (aba === 'tarefas') {
+        else if (this.abaAtual === 'tarefas') {
             let lista = [];
-            [d.cafe, d.pro, d.jan].forEach(p => { const cp = p.split('|')[0].trim(); if(this.db.receitas[cp]?.tarefas) this.db.receitas[cp].tarefas.split('\n').forEach(t => lista.push(t.trim())); });
+            [d.cafe, d.pro, d.jan].forEach(p => { 
+                const cp = p.split('|')[0].trim(); 
+                if(this.db.receitas[cp]?.tarefas) this.db.receitas[cp].tarefas.split('\n').forEach(t => { if(t.trim()) lista.push(t.trim()) }); 
+            });
             const nomes = ["DOMINGO","SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO"];
-            const feiAmanha = this.db.semana[nomes[(new Date().getDay()+1)%7]]?.fei;
+            const feiAmanha = this.db.semana[nomes[(new Date().getDay()+1)%7].toUpperCase()]?.fei;
             if (d.fei !== feiAmanha) lista.push(`🥣 Molho: ${feiAmanha} para amanhã`);
 
             let h = `<h2>✅ Tarefas do Dia</h2>`;
             const dataChave = new Date().toLocaleDateString();
             if (!this.db.checks_tarefas[dataChave]) this.db.checks_tarefas[dataChave] = [];
+            
+            if(lista.length === 0) h += "<p>Nenhuma tarefa cadastrada.</p>";
             lista.forEach(t => {
                 const c = this.db.checks_tarefas[dataChave].includes(t);
                 h += `<div class="check-item ${c?'done':''}"><input type="checkbox" ${c?'checked':''} onchange="app.toggleCheck('tarefa', '${t}', this)"> ${t}</div>`;
             });
             view.innerHTML = h;
         }
-        else if (aba === 'receitas') {
-            let h = `<h2>📖 Receitas</h2>`;
-            let todos = new Set();
-            Object.values(this.db.config_pratos).forEach(v => v.split('\n').forEach(p => { if(p.trim()) todos.add(p.split('|')[0].trim()) }));
-            Array.from(todos).sort().forEach(p => {
-                const r = this.db.receitas[p] || { ing: "", tarefas: "" };
-                h += `<div class="bloco"><b>${p}</b><br>
-                    <small>Ingredientes:</small><textarea class="edit-box" onchange="app.salvarRec('${p}','ing',this.value)">${r.ing}</textarea>
-                    <small>Tarefas:</small><textarea class="edit-box" onchange="app.salvarRec('${p}','tarefas',this.value)">${r.tarefas}</textarea></div>`;
-            });
-            view.innerHTML = h;
-        }
-        else if (aba === 'compras') {
+        else if (this.abaAtual === 'compras') {
             let ings = new Set();
             Object.values(this.db.semana).forEach(dia => {
                 [dia.cafe, dia.pro, dia.aco, dia.jan].forEach(p => {
@@ -168,21 +175,35 @@ const app = {
                     if(this.db.receitas[cp]?.ing) this.db.receitas[cp].ing.split('\n').forEach(i => { if(i.trim()) ings.add(i.trim()) });
                 });
             });
-            let h = `<h2>🛒 Compras</h2>`;
-            Array.from(ings).sort().forEach(ing => {
+            let h = `<h2>🛒 Compras da Semana</h2>`;
+            const listaOrdenada = Array.from(ings).sort();
+            if(listaOrdenada.length === 0) h += "<p>Adicione ingredientes na aba Receitas.</p>";
+            listaOrdenada.forEach(ing => {
                 const c = this.db.checks_compras.includes(ing);
                 h += `<div class="check-item ${c?'done':''}"><input type="checkbox" ${c?'checked':''} onchange="app.toggleCheck('compra', '${ing}', this)"> ${ing}</div>`;
             });
             view.innerHTML = h;
         }
-        else if (aba === 'pratos') {
+        else if (this.abaAtual === 'receitas') {
+            let h = `<h2>📖 Receitas</h2>`;
+            let todos = new Set();
+            Object.values(this.db.config_pratos).forEach(v => v.split('\n').forEach(p => { if(p.trim()) todos.add(p.split('|')[0].trim()) }));
+            Array.from(todos).sort().forEach(p => {
+                const r = this.db.receitas[p] || { ing: "", tarefas: "" };
+                h += `<div class="bloco"><b>${p}</b><br>
+                    <small>Ingredientes (um por linha):</small><textarea class="edit-box" onchange="app.salvarRec('${p}','ing',this.value)">${r.ing}</textarea>
+                    <small>Tarefas (uma por linha):</small><textarea class="edit-box" onchange="app.salvarRec('${p}','tarefas',this.value)">${r.tarefas}</textarea></div>`;
+            });
+            view.innerHTML = h;
+        }
+        else if (this.abaAtual === 'pratos') {
             let h = `<h2>⚙️ Base de Pratos</h2>`;
             Object.keys(this.db.config_pratos).forEach(k => {
                 h += `<b>${k.toUpperCase()}:</b><textarea class="edit-box" onchange="app.db.config_pratos['${k}']=this.value;app.salvar()">${this.db.config_pratos[k]}</textarea>`;
             });
             view.innerHTML = h;
         }
-        else if (aba === 'notif') {
+        else if (this.abaAtual === 'notif') {
             let h = `<h2>🔔 Notificações</h2>`;
             this.db.notificacoes.forEach((n, i) => {
                 h += `<div class="bloco">Hora: <input type="time" value="${n.h}" onchange="app.db.notificacoes[${i}].h=this.value;app.salvar()">
@@ -192,7 +213,12 @@ const app = {
         }
     },
 
-    salvarRec(p, c, v) { if(!this.db.receitas[p]) this.db.receitas[p]={ing:"",tarefas:""}; this.db.receitas[p][c]=v; this.salvar(); },
+    salvarRec(p, c, v) { 
+        if(!this.db.receitas[p]) this.db.receitas[p]={ing:"",tarefas:""}; 
+        this.db.receitas[p][c]=v; 
+        this.salvar(); 
+    },
+
     toggleCheck(tipo, item, el) {
         if(tipo==='tarefa'){
             const k = new Date().toLocaleDateString();
@@ -203,7 +229,7 @@ const app = {
             if(el.checked) this.db.checks_compras.push(item);
             else this.db.checks_compras = this.db.checks_compras.filter(x=>x!==item);
         }
-        this.salvar(); this.mudarAba(tipo==='tarefa'?'tarefas':'compras');
+        this.salvar();
     }
 };
 window.onload = () => app.init();
