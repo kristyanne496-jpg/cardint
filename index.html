@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Cardápio Inteligente v33</title>
+    <title>Cardápio Inteligente v34</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 10px 10px 10px; color: var(--text); }
@@ -53,7 +53,7 @@
 const app = {
     abaAtual: 'dia',
     user: localStorage.getItem('cardapio_user'),
-    db: JSON.parse(localStorage.getItem('v32_db')) || {
+    db: JSON.parse(localStorage.getItem('v34_db')) || {
         config_pratos: { cafe: "", bebidas: "", arroz: "", feijao: "", proteina: "", acompa: "", lanches: "", jantares: "" },
         receitas: {}, semana: {}, checks_tarefas: {}, checks_despensa: [], ordem_receitas: []
     },
@@ -74,7 +74,7 @@ const app = {
 
     logout() { localStorage.removeItem('cardapio_user'); location.reload(); },
 
-    salvar() { localStorage.setItem('v32_db', JSON.stringify(this.db)); this.render(); },
+    salvar() { localStorage.setItem('v34_db', JSON.stringify(this.db)); this.render(); },
 
     limpar(t) { return t ? t.trim() : ""; },
 
@@ -83,8 +83,7 @@ const app = {
         const r = this.db.receitas[n];
         if (!r || !r.ing || r.ing.trim() === "") return false;
         const nec = r.ing.split('\n').map(i => this.limpar(i)).filter(x => x);
-        if (nec.length === 0) return false;
-        return nec.every(ing => (this.db.checks_despensa || []).includes(ing));
+        return nec.length > 0 && nec.every(ing => (this.db.checks_despensa || []).includes(ing));
     },
 
     sortearInteligente(campo) {
@@ -105,6 +104,17 @@ const app = {
             };
         });
         this.salvar();
+    },
+
+    saveR(p) {
+        this.db.receitas[p] = { 
+            ing: document.getElementById(`ing-${p}`).value, 
+            tarefas: document.getElementById(`tar-${p}`).value 
+        };
+        // NOVA LÓGICA: Move para o FIM da lista ao editar
+        this.db.ordem_receitas = [...this.db.ordem_receitas.filter(x => x !== p), p];
+        this.salvar();
+        alert('Salvo em cardápio inteligente');
     },
 
     render() {
@@ -138,6 +148,20 @@ const app = {
             });
             view.innerHTML = h + `</table></div>`;
         }
+        else if (this.abaAtual === 'receitas') {
+            let h = `<h2>📖 Receitas</h2><p style="font-size:10px">Os pratos editados vão para o fim da lista.</p>`;
+            let base = new Set();
+            Object.values(this.db.config_pratos).forEach(v => v.split('\n').forEach(p => { if(p.trim()) base.add(this.limpar(p)) }));
+            let lista = [...new Set([...this.db.ordem_receitas, ...Array.from(base)])];
+            lista.forEach(p => {
+                if(!p) return;
+                const r = this.db.receitas[p] || { ing: "", tarefas: "" };
+                h += `<div class="bloco"><button class="btn-save-mini" onclick="app.saveR('${p}')">SALVAR</button><b>${p}</b><br>
+                    <textarea id="ing-${p}" class="edit-box" placeholder="Ingredientes">${r.ing}</textarea>
+                    <textarea id="tar-${p}" class="edit-box" placeholder="Tarefas">${r.tarefas}</textarea></div>`;
+            });
+            view.innerHTML = h;
+        }
         else if (this.abaAtual === 'tarefas') {
             let tasks = [];
             Object.values(d).forEach(prato => {
@@ -154,7 +178,7 @@ const app = {
                 const c = this.db.checks_tarefas[dataK].includes(t);
                 h += `<div class="check-item ${c?'done':''}"><input type="checkbox" ${c?'checked':''} onchange="app.toggleT('${t}', this)"> ${t}</div>`;
             });
-            view.innerHTML = h || "<p>Nenhuma tarefa para os pratos de hoje.</p>";
+            view.innerHTML = h || "<p>Nenhuma tarefa pendente.</p>";
         }
         else if (this.abaAtual === 'despensa') {
             let h = `<h2>📦 Despensa</h2><button class="btn-danger" onclick="if(confirm('Limpar toda a despensa?')){app.db.checks_despensa=[];app.salvar()}">🗑️ Esvaziar Despensa</button>`;
@@ -163,20 +187,6 @@ const app = {
             Array.from(ings).sort().forEach(ing => {
                 const c = (this.db.checks_despensa || []).includes(ing);
                 h += `<div class="check-item"><input type="checkbox" ${c?'checked':''} onchange="app.toggleD('${ing}', this)"> ${ing}</div>`;
-            });
-            view.innerHTML = h || "<p>Cadastre ingredientes nas receitas primeiro.</p>";
-        }
-        else if (this.abaAtual === 'receitas') {
-            let h = `<h2>📖 Receitas</h2>`;
-            let base = new Set();
-            Object.values(this.db.config_pratos).forEach(v => v.split('\n').forEach(p => { if(p.trim()) base.add(this.limpar(p)) }));
-            let lista = [...new Set([...this.db.ordem_receitas, ...Array.from(base)])];
-            lista.forEach(p => {
-                if(!p) return;
-                const r = this.db.receitas[p] || { ing: "", tarefas: "" };
-                h += `<div class="bloco"><button class="btn-save-mini" onclick="app.saveR('${p}')">SALVAR</button><b>${p}</b><br>
-                    <textarea id="ing-${p}" class="edit-box" placeholder="Ingredientes (um por linha)">${r.ing}</textarea>
-                    <textarea id="tar-${p}" class="edit-box" placeholder="Tarefas (uma por linha)">${r.tarefas}</textarea></div>`;
             });
             view.innerHTML = h;
         }
@@ -187,13 +197,6 @@ const app = {
             });
             view.innerHTML = h;
         }
-    },
-
-    saveR(p) {
-        this.db.receitas[p] = { ing: document.getElementById(`ing-${p}`).value, tarefas: document.getElementById(`tar-${p}`).value };
-        this.db.ordem_receitas = [p, ...this.db.ordem_receitas.filter(x => x !== p)];
-        this.salvar();
-        alert('Salvo em cardápio inteligente');
     },
 
     toggleD(ing, el) {
