@@ -4,13 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Cardápio Inteligente v34</title>
+    <title>Cardápio Inteligente v35</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 10px 10px 10px; color: var(--text); }
         .container { max-width: 1200px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; min-height: 95vh; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .nav-tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 15px; background: #eee; padding: 8px; border-radius: 12px; scrollbar-width: none; }
-        .nav-tabs::-webkit-scrollbar { display: none; }
         .tab { padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; background: #ddd; font-size: 11px; white-space: nowrap; flex-shrink: 0; }
         .tab.active { background: var(--primary); color: white; }
         .bloco { border-left: 5px solid var(--primary); background: #f8f9fa; padding: 12px; margin-bottom: 10px; border-radius: 8px; }
@@ -18,7 +17,7 @@
         .btn-acao { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin: 5px 0; }
         .btn-danger { background: #d32f2f; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
         .btn-save-mini { background: #444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 10px; float: right; cursor: pointer; }
-        .edit-box { width: 100%; min-height: 45px; padding: 8px; border: 1px solid #ccc; border-radius: 8px; margin: 5px 0; box-sizing: border-box; }
+        .edit-box { width: 100%; min-height: 45px; padding: 8px; border: 1px solid #ccc; border-radius: 8px; margin: 5px 0; box-sizing: border-box; font-family: inherit; }
         .check-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
         .done { text-decoration: line-through; opacity: 0.5; }
         .table-wrap { width: 100%; overflow-x: auto; margin-top: 10px; }
@@ -53,7 +52,7 @@
 const app = {
     abaAtual: 'dia',
     user: localStorage.getItem('cardapio_user'),
-    db: JSON.parse(localStorage.getItem('v34_db')) || {
+    db: JSON.parse(localStorage.getItem('v35_db')) || {
         config_pratos: { cafe: "", bebidas: "", arroz: "", feijao: "", proteina: "", acompa: "", lanches: "", jantares: "" },
         receitas: {}, semana: {}, checks_tarefas: {}, checks_despensa: [], ordem_receitas: []
     },
@@ -62,7 +61,7 @@ const app = {
         if (!this.user) document.getElementById('login-screen').style.display = 'block';
         else {
             document.getElementById('main-app').style.display = 'block';
-            if (!this.db.semana || Object.keys(this.db.semana).length === 0) this.gerarSemanaCompleta();
+            this.atualizarListaMestra();
             this.render();
         }
     },
@@ -74,9 +73,39 @@ const app = {
 
     logout() { localStorage.removeItem('cardapio_user'); location.reload(); },
 
-    salvar() { localStorage.setItem('v34_db', JSON.stringify(this.db)); this.render(); },
+    salvar() { localStorage.setItem('v35_db', JSON.stringify(this.db)); this.render(); },
 
     limpar(t) { return t ? t.trim() : ""; },
+
+    // Garante que todos os pratos da base existam na lista de ordem
+    atualizarListaMestra() {
+        let base = [];
+        Object.values(this.db.config_pratos).forEach(v => {
+            v.split('\n').forEach(p => { if(p.trim()) base.push(p.trim()) });
+        });
+        base.forEach(p => {
+            if (!this.db.ordem_receitas.includes(p)) this.db.ordem_receitas.push(p);
+        });
+        // Remove da ordem pratos que não existem mais na base
+        this.db.ordem_receitas = this.db.ordem_receitas.filter(p => base.includes(p));
+    },
+
+    saveR(p) {
+        this.db.receitas[p] = { 
+            ing: document.getElementById(`ing-${p}`).value, 
+            tarefas: document.getElementById(`tar-${p}`).value 
+        };
+        
+        // CORREÇÃO: Remove da posição atual e empurra para o final do array
+        let index = this.db.ordem_receitas.indexOf(p);
+        if (index > -1) {
+            this.db.ordem_receitas.splice(index, 1);
+            this.db.ordem_receitas.push(p);
+        }
+        
+        this.salvar();
+        alert('Salvo em cardápio inteligente');
+    },
 
     temTudo(nome) {
         const n = this.limpar(nome);
@@ -106,61 +135,41 @@ const app = {
         this.salvar();
     },
 
-    saveR(p) {
-        this.db.receitas[p] = { 
-            ing: document.getElementById(`ing-${p}`).value, 
-            tarefas: document.getElementById(`tar-${p}`).value 
-        };
-        // NOVA LÓGICA: Move para o FIM da lista ao editar
-        this.db.ordem_receitas = [...this.db.ordem_receitas.filter(x => x !== p), p];
-        this.salvar();
-        alert('Salvo em cardápio inteligente');
-    },
-
     render() {
         const view = document.getElementById('app-view');
-        const nomesSemana = ["DOMINGO","SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO"];
-        const hoje = nomesSemana[new Date().getDay()];
-        const d = this.db.semana[hoje] || this.db.semana["SEGUNDA"];
+        const hoje = ["DOMINGO","SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO"][new Date().getDay()];
+        const d = this.db.semana[hoje] || {};
 
         if (this.abaAtual === 'dia') {
             view.innerHTML = `<h3>🍴 Hoje (${hoje})</h3>
-                <div class="bloco"><h3>☕ Café</h3>${d.cafe} + ${d.bebC}</div>
-                <div class="bloco"><h3>🍎 Lanches</h3>M: ${d.lM} / T: ${d.lT}</div>
-                <div class="bloco"><h3>🍛 Almoço</h3>${d.arr}, ${d.fei}, ${d.pro}, ${d.aco} + ${d.bebA}</div>
-                <div class="bloco"><h3>🌙 Jantar</h3>${d.jan} + ${d.bebJ}</div>`;
-        }
-        else if (this.abaAtual === 'semana') {
-            let h = `<h2>📅 Semana</h2><button class="btn-acao" onclick="app.gerarSemanaCompleta()">🔄 Re-sortear por Despensa</button><div class="table-wrap"><table><tr><th>Refeição</th>`;
-            const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
-            dias.forEach(n => h += `<th>${n}</th>`);
-            h += `</tr>`;
-            const rows = [
-                {n:"☕ Café",k:"cafe"}, {n:"🥤 Beb.C",k:"bebC"}, {n:"🍎 Lanche M.",k:"lM"},
-                {n:"🍚 Arroz",k:"arr"}, {n:"🥣 Feijão",k:"fei"}, {n:"🍗 Proteína",k:"pro"}, 
-                {n:"🥗 Acomp.",k:"aco"}, {n:"🥤 Beb.A",k:"bebA"}, {n:"🍪 Lanche T.",k:"lT"},
-                {n:"🌙 Jantar",k:"jan"}, {n:"🥤 Beb.J",k:"bebJ"}
-            ];
-            rows.forEach(r => {
-                h += `<tr><td><b>${r.n}</b></td>`;
-                dias.forEach(dia => h += `<td>${this.db.semana[dia]?.[r.k] || 'Vazio'}</td>`);
-                h += `</tr>`;
-            });
-            view.innerHTML = h + `</table></div>`;
+                <div class="bloco"><h3>☕ Café</h3>${d.cafe || 'Vazio'} + ${d.bebC || ''}</div>
+                <div class="bloco"><h3>🍎 Lanches</h3>M: ${d.lM || 'Vazio'} / T: ${d.lT || 'Vazio'}</div>
+                <div class="bloco"><h3>🍛 Almoço</h3>${d.arr || ''}, ${d.fei || ''}, ${d.pro || ''}, ${d.aco || ''} + ${d.bebA || ''}</div>
+                <div class="bloco"><h3>🌙 Jantar</h3>${d.jan || 'Vazio'} + ${d.bebJ || ''}</div>`;
         }
         else if (this.abaAtual === 'receitas') {
-            let h = `<h2>📖 Receitas</h2><p style="font-size:10px">Os pratos editados vão para o fim da lista.</p>`;
-            let base = new Set();
-            Object.values(this.db.config_pratos).forEach(v => v.split('\n').forEach(p => { if(p.trim()) base.add(this.limpar(p)) }));
-            let lista = [...new Set([...this.db.ordem_receitas, ...Array.from(base)])];
-            lista.forEach(p => {
-                if(!p) return;
+            this.atualizarListaMestra(); // Sincroniza antes de exibir
+            let h = `<h2>📖 Receitas</h2><p style="font-size:10px">O prato salvo por último vai para o fim da lista.</p>`;
+            this.db.ordem_receitas.forEach(p => {
                 const r = this.db.receitas[p] || { ing: "", tarefas: "" };
                 h += `<div class="bloco"><button class="btn-save-mini" onclick="app.saveR('${p}')">SALVAR</button><b>${p}</b><br>
                     <textarea id="ing-${p}" class="edit-box" placeholder="Ingredientes">${r.ing}</textarea>
                     <textarea id="tar-${p}" class="edit-box" placeholder="Tarefas">${r.tarefas}</textarea></div>`;
             });
             view.innerHTML = h;
+        }
+        else if (this.abaAtual === 'semana') {
+            let h = `<h2>📅 Semana</h2><button class="btn-acao" onclick="app.gerarSemanaCompleta()">🔄 Sortear por Despensa</button><div class="table-wrap"><table><tr><th>Refeição</th>`;
+            const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
+            dias.forEach(n => h += `<th>${n}</th>`);
+            h += `</tr>`;
+            const rows = [{n:"Café",k:"cafe"},{n:"Beb.C",k:"bebC"},{n:"Lanche M.",k:"lM"},{n:"Arroz",k:"arr"},{n:"Feijão",k:"fei"},{n:"Prot.",k:"pro"},{n:"Acomp.",k:"aco"},{n:"Beb.A",k:"bebA"},{n:"Lanche T.",k:"lT"},{n:"Jantar",k:"jan"},{n:"Beb.J",k:"bebJ"}];
+            rows.forEach(r => {
+                h += `<tr><td><b>${r.n}</b></td>`;
+                dias.forEach(dia => h += `<td>${this.db.semana[dia]?.[r.k] || 'Vazio'}</td>`);
+                h += `</tr>`;
+            });
+            view.innerHTML = h + `</table></div>`;
         }
         else if (this.abaAtual === 'tarefas') {
             let tasks = [];
@@ -170,8 +179,7 @@ const app = {
             });
             if(d.arr && d.arr.toLowerCase().includes("arroz")) tasks.push("🍚 Refogar " + d.arr);
             if(d.fei && d.fei.toLowerCase().includes("feijão")) tasks.push("🥣 Cozinhar " + d.fei);
-
-            let h = `<h2>✅ Tarefas do Dia</h2>`;
+            let h = `<h2>✅ Tarefas</h2>`;
             const dataK = new Date().toLocaleDateString();
             if (!this.db.checks_tarefas[dataK]) this.db.checks_tarefas[dataK] = [];
             tasks.forEach(t => {
@@ -181,7 +189,7 @@ const app = {
             view.innerHTML = h || "<p>Nenhuma tarefa pendente.</p>";
         }
         else if (this.abaAtual === 'despensa') {
-            let h = `<h2>📦 Despensa</h2><button class="btn-danger" onclick="if(confirm('Limpar toda a despensa?')){app.db.checks_despensa=[];app.salvar()}">🗑️ Esvaziar Despensa</button>`;
+            let h = `<h2>📦 Despensa</h2><button class="btn-danger" onclick="if(confirm('Limpar tudo?')){app.db.checks_despensa=[];app.salvar()}">🗑️ Esvaziar Despensa</button>`;
             let ings = new Set();
             Object.values(this.db.receitas).forEach(r => { if(r.ing) r.ing.split('\n').forEach(i => { if(i.trim()) ings.add(this.limpar(i)) })});
             Array.from(ings).sort().forEach(ing => {
@@ -191,7 +199,7 @@ const app = {
             view.innerHTML = h;
         }
         else if (this.abaAtual === 'pratos') {
-            let h = `<h2>⚙️ Base de Pratos</h2>`;
+            let h = `<h2>⚙️ Base</h2>`;
             Object.keys(this.db.config_pratos).forEach(k => {
                 h += `<b>${k.toUpperCase()}:</b><textarea class="edit-box" onchange="app.db.config_pratos['${k}']=this.value;app.salvar()">${this.db.config_pratos[k]}</textarea>`;
             });
