@@ -6,28 +6,21 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2e7d32">
-    <link rel="manifest" href="manifest.json">
-    <title>Cardápio Pro v27</title>
+    <title>Cardápio Pro v27.1</title>
     <style>
-        :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
+        :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; --accent: #e65100; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: env(safe-area-inset-top) 10px 10px 10px; color: var(--text); }
         .container { max-width: 1200px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; min-height: 95vh; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        
-        /* Menu */
         .nav-tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 15px; background: #eee; padding: 8px; border-radius: 12px; scrollbar-width: none; }
         .nav-tabs::-webkit-scrollbar { display: none; }
         .tab { padding: 10px 15px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; background: #ddd; font-size: 11px; white-space: nowrap; flex-shrink: 0; }
         .tab.active { background: var(--primary); color: white; }
-        
         .bloco { border-left: 5px solid var(--primary); background: #f8f9fa; padding: 15px; margin-bottom: 12px; border-radius: 8px; }
         h3 { margin: 0 0 5px 0; font-size: 11px; color: #666; text-transform: uppercase; }
-        
-        /* Tabela */
         .table-wrap { width: 100%; overflow-x: auto; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 900px; font-size: 11px; }
-        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; vertical-align: top; }
-        .btn-sorteio-mini { background: none; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 10px; padding: 2px 4px; margin-left: 4px; }
-        
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+        .btn-sorteio-mini { background: #fff; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 10px; padding: 2px 4px; margin-left: 4px; }
         .btn-acao { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin: 5px 0; }
         .btn-save-mini { background: #444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; float: right; }
         .edit-box { width: 100%; min-height: 50px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin: 5px 0; font-family: inherit; box-sizing: border-box; }
@@ -35,17 +28,18 @@
         .done { text-decoration: line-through; opacity: 0.5; }
 
         @media print {
-            body { background: white; padding: 0; }
             .nav-tabs, .btn-acao, .btn-save-mini, .btn-sorteio-mini { display: none !important; }
+            body { padding: 0; background: white; }
             .container { box-shadow: none; width: 100%; max-width: none; }
-            table { min-width: 100%; font-size: 10pt; }
-            th { background: #eee !important; color: black !important; }
+            table { width: 100%; border: 1px solid #000; font-size: 10pt; }
+            th, td { border: 1px solid #000; padding: 5px; }
+            h2 { font-size: 14pt; }
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="nav-tabs" id="menu">
+    <div class="nav-tabs">
         <button class="tab active" onclick="app.mudarAba('dia', this)">Hoje</button>
         <button class="tab" onclick="app.mudarAba('tarefas', this)">Tarefas</button>
         <button class="tab" onclick="app.mudarAba('semana', this)">Semana</button>
@@ -53,7 +47,7 @@
         <button class="tab" onclick="app.mudarAba('receitas', this)">Receitas</button>
         <button class="tab" onclick="app.mudarAba('pratos', this)">Pratos</button>
     </div>
-    <div id="app-view">Carregando...</div>
+    <div id="app-view">Iniciando...</div>
 </div>
 
 <script>
@@ -67,7 +61,6 @@ const app = {
     init() {
         if (!this.db.semana || Object.keys(this.db.semana).length === 0) this.gerarSemanaCompleta();
         this.render();
-        this.registrarOffline();
     },
 
     salvar() { 
@@ -103,7 +96,7 @@ const app = {
                 bebJ: this.sortearItem('bebidas')
             };
         });
-        this.db.checks_despensa = []; // Limpa despensa na nova semana
+        this.db.checks_despensa = [];
         this.salvar();
     },
 
@@ -126,19 +119,21 @@ const app = {
             view.innerHTML = `
                 <h3>🍴 Hoje (${hojeNome})</h3>
                 <div class="bloco"><h3>☕ Café</h3>${d.cafe} + ${d.bebC}</div>
+                <div class="bloco"><h3>🍎 Lanche M.</h3>${d.lM}</div>
                 <div class="bloco"><h3>🍛 Almoço</h3>${d.arr}, ${d.fei}, ${d.pro}, ${d.aco}</div>
+                <div class="bloco"><h3>🍪 Lanche T.</h3>${d.lT}</div>
                 <div class="bloco"><h3>🌙 Jantar</h3>${d.jan} + ${d.bebJ}</div>`;
         } 
         else if (this.abaAtual === 'semana') {
             const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
-            let h = `<h2>📅 Semana</h2><button class="btn-acao" onclick="window.print()">🖨️ Imprimir Cardápio</button><div class="table-wrap"><table><tr><th>Refeição</th>`;
+            let h = `<h2>📅 Semana</h2><button class="btn-acao" onclick="window.print()">🖨️ Imprimir</button><div class="table-wrap"><table><tr><th>Refeição</th>`;
             dias.forEach(n => h += `<th>${n}</th>`);
             h += `</tr>`;
             
             const rows = [
-                {n: "Café", k: "cafe"}, {n: "Bebida C.", k: "bebC"},
-                {n: "Arroz", k: "arr"}, {n: "Feijão", k: "fei"}, {n: "Proteína", k: "pro"},
-                {n: "Jantar", k: "jan"}
+                {n: "Café", k: "cafe"}, {n: "Lanche M.", k: "lM"},
+                {n: "Proteína", k: "pro"}, {n: "Acomp.", k: "aco"},
+                {n: "Lanche T.", k: "lT"}, {n: "Jantar", k: "jan"}
             ];
 
             rows.forEach(r => {
@@ -148,7 +143,7 @@ const app = {
                 });
                 h += `</tr>`;
             });
-            view.innerHTML = h + `</table></div><button class="btn-acao" style="background:#888" onclick="app.gerarSemanaCompleta()">🎲 Sortear Toda a Semana</button>`;
+            view.innerHTML = h + `</table></div>`;
         }
         else if (this.abaAtual === 'despensa') {
             let ings = new Set();
@@ -160,31 +155,30 @@ const app = {
                     }
                 });
             });
-            let h = `<h2>📦 Despensa (O que tenho?)</h2><p style="font-size:10px">Marque o que já tem em casa para organizar a semana.</p>`;
+            let h = `<h2>📦 Despensa</h2>`;
             Array.from(ings).sort().forEach(ing => {
                 const c = (this.db.checks_despensa || []).includes(ing);
                 h += `<div class="check-item ${c?'done':''}"><input type="checkbox" ${c?'checked':''} onchange="app.toggleCheck('despensa', '${ing}', this)"> ${ing}</div>`;
             });
-            view.innerHTML = h || "<p>Nenhum ingrediente nas receitas da semana.</p>";
+            view.innerHTML = h || "<p>Nenhum ingrediente cadastrado.</p>";
         }
         else if (this.abaAtual === 'tarefas') {
             let tasks = [];
-            // Tarefas das receitas
             Object.values(d).forEach(prato => {
                 const n = this.limpar(prato);
                 if(this.db.receitas[n]?.tarefas) {
                     this.db.receitas[n].tarefas.split('\n').forEach(t => tasks.push(t.trim()));
                 }
             });
-            // Verificação Arroz e Feijão Automática
-            if(d.arr && d.arr.toLowerCase().includes("arroz")) tasks.push("🍚 Refogar o " + d.arr);
-            if(d.fei && d.fei.toLowerCase().includes("feijão")) tasks.push("🥣 Cozinhar o " + d.fei);
+            // Tarefas automáticas baseadas nos nomes
+            if(d.arr.toLowerCase().includes("arroz")) tasks.push("🍚 Refogar o " + d.arr);
+            if(d.fei.toLowerCase().includes("feijão")) tasks.push("🥣 Cozinhar o " + d.fei);
             
             const amanhã = nomesSemana[(new Date().getDay()+1)%7];
             const feiAmanha = this.db.semana[amanhã]?.fei;
-            if (feiAmanha) tasks.push(`🌙 Deixar ${feiAmanha} de molho para amanhã`);
+            if (feiAmanha) tasks.push(`🌙 Molho: ${feiAmanha} para amanhã`);
 
-            let h = `<h2>✅ Tarefas do Dia</h2>`;
+            let h = `<h2>✅ Tarefas</h2>`;
             const dataK = new Date().toLocaleDateString();
             if (!this.db.checks_tarefas[dataK]) this.db.checks_tarefas[dataK] = [];
             tasks.forEach(t => {
@@ -223,6 +217,7 @@ const app = {
             tarefas: document.getElementById(`tar-${p}`).value 
         };
         this.salvar();
+        alert('Prato "' + p + '" atualizado!');
     },
 
     toggleCheck(tipo, item, el) {
@@ -235,12 +230,6 @@ const app = {
             else this.db.checks_despensa = this.db.checks_despensa.filter(x=>x!==item);
         }
         this.salvar();
-    },
-
-    registrarOffline() {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(() => {});
-        }
     }
 };
 window.onload = () => app.init();
