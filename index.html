@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cardápio Inteligente v43</title>
+    <title>Cardápio Inteligente v44</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
@@ -23,7 +23,7 @@
         .check-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid #eee; }
         .done { text-decoration: line-through; opacity: 0.5; }
         .table-wrap { overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 1200px; font-size: 10px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1250px; font-size: 10px; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: left; vertical-align: top; }
         .notif-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
     </style>
@@ -52,12 +52,15 @@ const app = {
             "Arroz Branco": { ing: [{qtd: 2, nome: "Arroz"}], tarefas: "Lavar o arroz\nRefogar com alho\nCozinhar por 15min" },
             "Feijão Carioca": { ing: [{qtd: 1, nome: "Feijão"}], tarefas: "Deixar de molho\nCozinhar na pressão\nTemperar" },
             "Pão com Ovo": { ing: [{qtd: 1, nome: "Pão"}, {qtd: 2, nome: "Ovo"}], tarefas: "Fritar os ovos\nAquecer o pão" },
-            "Frango Grelhado": { ing: [{qtd: 500, nome: "Frango"}], tarefas: "Temperar o frango\nGrelhar na frigideira" }
-        },
-        base: "Pão com Ovo\nArroz Branco\nFeijão Carioca\nFrango Grelhado"
+            "Bolo de Cenoura": { ing: [{qtd: 2, nome: "Cenoura"}, {qtd: 3, nome: "Ovo"}], tarefas: "Bater massa\nAssar 40min" }
+        }
     },
-    db: JSON.parse(localStorage.getItem('v43_db')) || {
-        config_pratos: { cafe: "Pão com Ovo", beb_cafe: "", lanches: "", arroz: "Arroz Branco", feijao: "Feijão Carioca", proteina: "Frango Grelhado", acompa: "", beb_almoco: "", jantares: "", beb_jantar: "" },
+    db: JSON.parse(localStorage.getItem('v44_db')) || {
+        config_pratos: { 
+            cafe: "Pão com Ovo", beb_cafe: "Café", lanches: "Bolo de Cenoura", 
+            arroz: "Arroz Branco", feijao: "Feijão Carioca", proteina: "Frango", 
+            acompa: "Salada", beb_almoco: "Suco", jantares: "Sopa", beb_jantar: "Água" 
+        },
         receitas: {}, semana: {}, despensa: {}, ordem_receitas: [], ordem_despensa: [], checks_tarefas: {}, notificacoes: []
     },
 
@@ -74,7 +77,7 @@ const app = {
         }
     },
 
-    salvar() { localStorage.setItem('v43_db', JSON.stringify(this.db)); this.render(); },
+    salvar() { localStorage.setItem('v44_db', JSON.stringify(this.db)); this.render(); },
 
     sincronizarListas() {
         let basePratos = [];
@@ -159,10 +162,28 @@ const app = {
                 <div class="bloco"><h3>🍛 Almoço</h3>${d.arr}, ${d.fei}, ${d.pro}, ${d.aco} + ${d.bebA}</div>
                 <div class="bloco"><h3>🌙 Jantar</h3>${d.jan} + ${d.bebJ}</div>`;
         }
+        else if (this.abaAtual === 'semana') {
+            let h = `<h2>📅 Semana</h2><button class="btn-acao" onclick="app.gerarSemana()">🔄 Sorteio Inteligente</button>
+                <div class="table-wrap"><table><tr><th>Refeição</th>`;
+            const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
+            dias.forEach(n => h += `<th>${n}</th>`);
+            h += `</tr>`;
+            const rows = [
+                {n:"☕ Café",k:"cafe"}, {n:"🥤 Beb. Café",k:"bebC"}, {n:"🍎 Lanche M.",k:"lM"},
+                {n:"🍚 Arroz",k:"arr"}, {n:"🍲 Feijão",k:"fei"}, {n:"🍖 Proteína",k:"pro"}, {n:"🥗 Acomp.",k:"aco"},
+                {n:"🥤 Beb. Almoço",k:"bebA"}, {n:"🍎 Lanche T.",k:"lT"}, {n:"🌙 Jantar",k:"jan"}, {n:"🥤 Beb. Jantar",k:"bebJ"}
+            ];
+            rows.forEach(r => {
+                h += `<tr><td><b>${r.n}</b></td>`;
+                dias.forEach(dia => h += `<td>${this.db.semana[dia]?.[r.k] || '-'} <button class="btn-sorteio-item" onclick="app.reSortear('${dia}','${r.k}')">🎲</button></td>`);
+                h += `</tr>`;
+            });
+            view.innerHTML = h + `</table></div>`;
+        }
         else if (this.abaAtual === 'tarefas') {
             let tasks = [];
-            Object.values(d).forEach(prato => {
-                const r = this.db.receitas[prato.trim()];
+            Object.values(d).forEach(p => {
+                const r = this.db.receitas[p.toString().trim()];
                 if(r?.tarefas) r.tarefas.split('\n').forEach(t => { if(t.trim()) tasks.push(t.trim()) });
             });
             let h = `<h2>✅ Tarefas do Dia</h2>`;
@@ -172,23 +193,7 @@ const app = {
                 const c = this.db.checks_tarefas[dataK].includes(t);
                 h += `<div class="check-item ${c?'done':''}"><input type="checkbox" ${c?'checked':''} onchange="app.toggleT('${t}', this)"> ${t}</div>`;
             });
-            view.innerHTML = h || "<p>Nenhuma tarefa pendente para o cardápio de hoje.</p>";
-        }
-        else if (this.abaAtual === 'semana') {
-            let h = `<h2>📅 Semana</h2><button class="btn-acao" onclick="app.gerarSemana()">🔄 Sorteio Inteligente</button>
-                <div class="table-wrap"><table><tr><th>Refeição</th>`;
-            const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
-            dias.forEach(n => h += `<th>${n}</th>`);
-            h += `</tr>`;
-            const rows = [
-                {n:"Café",k:"cafe"},{n:"Arroz",k:"arr"},{n:"Feijão",k:"fei"},{n:"Proteína",k:"pro"},{n:"Jantar",k:"jan"}
-            ];
-            rows.forEach(r => {
-                h += `<tr><td><b>${r.n}</b></td>`;
-                dias.forEach(dia => h += `<td>${this.db.semana[dia]?.[r.k] || '-'} <button class="btn-sorteio-item" onclick="app.reSortear('${dia}','${r.k}')">🎲</button></td>`);
-                h += `</tr>`;
-            });
-            view.innerHTML = h + `</table></div>`;
+            view.innerHTML = h || "<p>Nenhuma tarefa. Certifique-se de que os pratos de hoje têm tarefas cadastradas.</p>";
         }
         else if (this.abaAtual === 'receitas') {
             let h = `<h2>📖 Receitas</h2>`;
@@ -237,7 +242,7 @@ const app = {
     },
 
     reSortear(dia, k) {
-        const mapa = {cafe:'cafe', arr:'arroz', fei:'feijao', pro:'proteina', jan:'jantares'};
+        const mapa = {cafe:'cafe', bebC:'beb_cafe', lM:'lanches', arr:'arroz', fei:'feijao', pro:'proteina', aco:'acompa', bebA:'beb_almoco', lT:'lanches', jan:'jantares', bebJ:'beb_jantar'};
         this.db.semana[dia][k] = this.sortearItem(mapa[k] || k);
         this.salvar();
     },
@@ -252,7 +257,7 @@ const app = {
 
     addNotif() {
         if(!this.db.notificacoes) this.db.notificacoes = [];
-        this.db.notificacoes.push({hora: "08:00", txt: "Nova tarefa"});
+        this.db.notificacoes.push({hora: "08:00", txt: "Hora de preparar a refeição!"});
         this.salvar();
     },
 
