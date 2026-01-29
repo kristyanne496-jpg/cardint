@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cardápio Inteligente v38</title>
+    <title>Cardápio Inteligente v40</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; min-height: 95vh; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; min-height: 95vh; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .nav-tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 15px; background: #eee; padding: 8px; border-radius: 12px; scrollbar-width: none; }
         .tab { padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; background: #ddd; font-size: 11px; white-space: nowrap; flex-shrink: 0; }
         .tab.active { background: var(--primary); color: white; }
@@ -15,7 +15,7 @@
         h3 { margin: 0 0 5px 0; font-size: 10px; color: #666; text-transform: uppercase; }
         .btn-acao { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin: 5px 0; }
         .btn-save-mini { background: #444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 10px; float: right; cursor: pointer; }
-        .btn-sorteio-item { background: #fff; border: 1px solid var(--primary); color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 5px; }
+        .btn-sorteio-item { background: #fff; border: 1px solid var(--primary); color: var(--primary); padding: 2px 4px; border-radius: 4px; font-size: 9px; cursor: pointer; margin-left: 3px; }
         .edit-box { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 8px; margin: 5px 0; box-sizing: border-box; font-family: inherit; }
         .linha-ing { display: flex; gap: 5px; margin-bottom: 5px; }
         .qtd-f { width: 60px; text-align: center; }
@@ -23,8 +23,8 @@
         .check-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid #eee; }
         .done { text-decoration: line-through; opacity: 0.5; }
         .table-wrap { overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 1100px; font-size: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+        table { width: 100%; border-collapse: collapse; min-width: 1200px; font-size: 10px; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; vertical-align: top; }
         .notif-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
     </style>
 </head>
@@ -47,9 +47,27 @@
 <script>
 const app = {
     abaAtual: 'dia',
-    db: JSON.parse(localStorage.getItem('v38_db')) || {
-        config_pratos: { cafe: "", beb_cafe: "", lanches: "", arroz: "", feijao: "", proteina: "", acompa: "", beb_almoco: "", jantares: "", beb_jantar: "" },
-        receitas: {}, semana: {}, despensa: {}, ordem_receitas: [], checks_tarefas: {}, notificacoes: []
+    db: JSON.parse(localStorage.getItem('v40_db')) || {
+        config_pratos: { 
+            cafe: "Pão com Ovo\nTapioca\nFrutas", 
+            beb_cafe: "Café com Leite\nSuco de Laranja", 
+            lanches: "Iogurte\nMaçã\nBolo de Cenoura", 
+            arroz: "Arroz Branco\nArroz Integral", 
+            feijao: "Feijão Carioca\nFeijão Preto", 
+            proteina: "Frango Grelhado\nCarne Moída\nOmelete de Legumes", 
+            acompa: "Salada Alface\nBatata Doce\nFarofa", 
+            beb_almoco: "Suco de Limão\nÁgua com Gás", 
+            jantares: "Sopa de Legumes\nSanduíche Natural", 
+            beb_jantar: "Chá de Camomila\nÁgua" 
+        },
+        receitas: {
+            "Arroz Branco": { ing: [{qtd: 2, nome: "xícara de arroz"}], tarefas: "Lavar o arroz\nRefogar com alho\nCozinhar por 15min" },
+            "Feijão Carioca": { ing: [{qtd: 1, nome: "xícara de feijão"}], tarefas: "Deixar de molho\nCozinhar na pressão\nTemperar" },
+            "Pão com Ovo": { ing: [{qtd: 1, nome: "pão"}, {qtd: 2, nome: "ovos"}], tarefas: "Fritar os ovos\nAquecer o pão" },
+            "Frango Grelhado": { ing: [{qtd: 500, nome: "g de frango"}], tarefas: "Temperar o frango\nGrelhar na frigideira" },
+            "Bolo de Cenoura": { ing: [{qtd: 3, nome: "cenouras"}, {qtd: 3, nome: "ovos"}, {qtd: 2, nome: "xícaras de farinha"}], tarefas: "Bater no liquidificador\nAssar por 40min" }
+        },
+        semana: {}, despensa: {}, ordem_receitas: [], checks_tarefas: {}, notificacoes: []
     },
 
     init() {
@@ -57,18 +75,18 @@ const app = {
         this.render();
     },
 
-    salvar() { localStorage.setItem('v38_db', JSON.stringify(this.db)); this.render(); },
+    salvar() { localStorage.setItem('v40_db', JSON.stringify(this.db)); this.render(); },
 
     podeFazer(nomePrato, estoqueRef = null) {
         const r = this.db.receitas[nomePrato.trim()];
-        if (!r || !r.ing || r.ing.length === 0) return true; // Se não tem receita, assume que pode
+        if (!r || !r.ing || r.ing.length === 0) return true;
         const est = estoqueRef || this.db.despensa;
         return r.ing.every(i => (est[i.nome] || 0) >= parseFloat(i.qtd));
     },
 
     consumir(nomePrato, est) {
         const r = this.db.receitas[nomePrato.trim()];
-        if (r && r.ing) r.ing.forEach(i => { if(est[i.nome]) est[i.nome] -= parseFloat(i.qtd); });
+        if (r && r.ing) r.ing.forEach(i => { if(est[i.nome] !== undefined) est[i.nome] -= parseFloat(i.qtd); });
     },
 
     sortearItem(campo, est = null) {
@@ -105,24 +123,9 @@ const app = {
         if (this.abaAtual === 'dia') {
             view.innerHTML = `<h3>🍴 Hoje (${hoje})</h3>
                 <div class="bloco"><h3>☕ Café</h3>${d.cafe} + ${d.bebC}</div>
-                <div class="bloco"><h3>🍎 Lanches</h3>Manhã: ${d.lM} <br> Tarde: ${d.lT}</div>
+                <div class="bloco"><h3>🍎 Lanches</h3>M: ${d.lM} / T: ${d.lT}</div>
                 <div class="bloco"><h3>🍛 Almoço</h3>${d.arr}, ${d.fei}, ${d.pro}, ${d.aco} + ${d.bebA}</div>
                 <div class="bloco"><h3>🌙 Jantar</h3>${d.jan} + ${d.bebJ}</div>`;
-        }
-        else if (this.abaAtual === 'tarefas') {
-            let tasks = [];
-            Object.values(d).forEach(prato => {
-                const r = this.db.receitas[prato];
-                if(r?.tarefas) r.tarefas.split('\n').forEach(t => { if(t.trim()) tasks.push(t.trim()) });
-            });
-            let h = `<h2>✅ Tarefas</h2>`;
-            const dataK = new Date().toLocaleDateString();
-            if (!this.db.checks_tarefas[dataK]) this.db.checks_tarefas[dataK] = [];
-            tasks.forEach(t => {
-                const c = this.db.checks_tarefas[dataK].includes(t);
-                h += `<div class="check-item ${c?'done':''}"><input type="checkbox" ${c?'checked':''} onchange="app.toggleT('${t}', this)"> ${t}</div>`;
-            });
-            view.innerHTML = h || "<p>Sem tarefas para hoje.</p>";
         }
         else if (this.abaAtual === 'semana') {
             let h = `<h2>📅 Semana</h2>
@@ -134,8 +137,8 @@ const app = {
             h += `</tr>`;
             const rows = [
                 {n:"Café",k:"cafe"},{n:"Beb.C",k:"bebC"},{n:"Lanche M.",k:"lM"},
-                {n:"Prot.",k:"pro"},{n:"Beb.A",k:"bebA"},{n:"Lanche T.",k:"lT"},
-                {n:"Jantar",k:"jan"},{n:"Beb.J",k:"bebJ"}
+                {n:"Arroz",k:"arr"},{n:"Feijão",k:"fei"},{n:"Proteína",k:"pro"},{n:"Acomp.",k:"aco"},
+                {n:"Beb.A",k:"bebA"},{n:"Lanche T.",k:"lT"},{n:"Jantar",k:"jan"},{n:"Beb.J",k:"bebJ"}
             ];
             rows.forEach(r => {
                 h += `<tr><td><b>${r.n}</b></td>`;
@@ -164,17 +167,20 @@ const app = {
             });
             view.innerHTML = h;
         }
-        else if (this.abaAtual === 'notificacoes') {
-            let h = `<h2>🔔 Notificações (APK)</h2>
-                <button class="btn-acao" onclick="app.addNotif()">+ Nova Notificação</button>`;
-            (this.db.notificacoes || []).forEach((n, idx) => {
-                h += `<div class="bloco notif-row">
-                    <input type="time" class="edit-box" style="width:100px" value="${n.hora}" onchange="app.db.notificacoes[${idx}].hora=this.value;app.salvar()">
-                    <input type="text" class="edit-box" placeholder="Mensagem" value="${n.txt}" onchange="app.db.notificacoes[${idx}].txt=this.value;app.salvar()">
-                    <button onclick="app.db.notificacoes.splice(${idx},1);app.salvar()" style="background:red; color:white; border:none; border-radius:50%; width:25px; height:25px; cursor:pointer">X</button>
-                </div>`;
+        else if (this.abaAtual === 'tarefas') {
+            let tasks = [];
+            Object.values(d).forEach(prato => {
+                const r = this.db.receitas[prato];
+                if(r?.tarefas) r.tarefas.split('\n').forEach(t => { if(t.trim()) tasks.push(t.trim()) });
             });
-            view.innerHTML = h;
+            let h = `<h2>✅ Tarefas</h2>`;
+            const dataK = new Date().toLocaleDateString();
+            if (!this.db.checks_tarefas[dataK]) this.db.checks_tarefas[dataK] = [];
+            tasks.forEach(t => {
+                const c = this.db.checks_tarefas[dataK].includes(t);
+                h += `<div class="check-item ${c?'done':''}"><input type="checkbox" ${c?'checked':''} onchange="app.toggleT('${t}', this)"> ${t}</div>`;
+            });
+            view.innerHTML = h || "<p>Sem tarefas.</p>";
         }
         else if (this.abaAtual === 'despensa') {
             let h = `<h2>📦 Despensa</h2>`;
@@ -185,7 +191,18 @@ const app = {
                     <input type="number" class="qtd-input" style="width:70px" value="${this.db.despensa[ing] || 0}" 
                     onchange="app.db.despensa['${ing}'] = parseFloat(this.value); app.salvar()"></div>`;
             });
-            view.innerHTML = h || "<p>Sem ingredientes cadastrados.</p>";
+            view.innerHTML = h;
+        }
+        else if (this.abaAtual === 'notificacoes') {
+            let h = `<h2>🔔 Notificações</h2><button class="btn-acao" onclick="app.addNotif()">+ Nova Notificação</button>`;
+            (this.db.notificacoes || []).forEach((n, idx) => {
+                h += `<div class="bloco notif-row">
+                    <input type="time" class="edit-box" style="width:100px" value="${n.hora}" onchange="app.db.notificacoes[${idx}].hora=this.value;app.salvar()">
+                    <input type="text" class="edit-box" placeholder="Msg" value="${n.txt}" onchange="app.db.notificacoes[${idx}].txt=this.value;app.salvar()">
+                    <button onclick="app.db.notificacoes.splice(${idx},1);app.salvar()" style="background:#d32f2f; color:white; border:none; border-radius:5px; padding:5px 10px;">X</button>
+                </div>`;
+            });
+            view.innerHTML = h;
         }
         else if (this.abaAtual === 'pratos') {
             let h = `<h2>⚙️ Base</h2>`;
@@ -196,14 +213,9 @@ const app = {
         }
     },
 
-    addNotif() {
-        if(!this.db.notificacoes) this.db.notificacoes = [];
-        this.db.notificacoes.push({hora: "08:00", txt: "Hora de preparar o café!"});
-        this.salvar();
-    },
-
     saveR(p) {
-        const linhas = document.querySelectorAll(`.ing-row-${p.replace(/\s/g, '')}`);
+        const idBase = p.replace(/\s/g, '');
+        const linhas = document.querySelectorAll(`.ing-row-${idBase}`);
         let novosIng = [];
         linhas.forEach(row => {
             const q = row.querySelector('.qtd-f').value;
@@ -213,7 +225,13 @@ const app = {
         this.db.receitas[p] = { ing: novosIng, tarefas: document.getElementById(`tar-${p}`).value };
         this.db.ordem_receitas = [...this.db.ordem_receitas.filter(x => x !== p), p];
         this.salvar();
-        alert('Receita salva!');
+        alert('Salvo!');
+    },
+
+    reSortear(dia, k) {
+        const mapa = {cafe:'cafe', bebC:'beb_cafe', lM:'lanches', arr:'arroz', fei:'feijao', pro:'proteina', aco:'acompa', bebA:'beb_almoco', lT:'lanches', jan:'jantares', bebJ:'beb_jantar'};
+        this.db.semana[dia][k] = this.sortearItem(mapa[k] || k);
+        this.salvar();
     },
 
     addIngRow(p) {
@@ -224,9 +242,9 @@ const app = {
         container.appendChild(div);
     },
 
-    reSortear(dia, k) {
-        const mapeamento = {cafe:'cafe', bebC:'beb_cafe', lM:'lanches', pro:'proteina', bebA:'beb_almoco', lT:'lanches', jan:'jantares', bebJ:'beb_jantar'};
-        this.db.semana[dia][k] = this.sortearItem(mapeamento[k] || k);
+    addNotif() {
+        if(!this.db.notificacoes) this.db.notificacoes = [];
+        this.db.notificacoes.push({hora: "08:00", txt: "Hora de preparar a refeição!"});
         this.salvar();
     },
 
