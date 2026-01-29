@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cardápio Inteligente v41</title>
+    <title>Cardápio Inteligente v42</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
@@ -22,8 +22,8 @@
         .ing-f { flex-grow: 1; }
         .check-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid #eee; }
         .table-wrap { overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 1100px; font-size: 10px; }
-        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; min-width: 1200px; font-size: 10px; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; vertical-align: top; }
     </style>
 </head>
 <body>
@@ -45,41 +45,34 @@
 <script>
 const app = {
     abaAtual: 'dia',
-    db: JSON.parse(localStorage.getItem('v41_db')) || {
+    db: JSON.parse(localStorage.getItem('v42_db')) || {
         config_pratos: { cafe: "", beb_cafe: "", lanches: "", arroz: "", feijao: "", proteina: "", acompa: "", beb_almoco: "", jantares: "", beb_jantar: "" },
         receitas: {}, semana: {}, despensa: {}, ordem_receitas: [], ordem_despensa: [], checks_tarefas: {}, notificacoes: []
     },
 
     init() {
         this.sincronizarListas();
+        if (!this.db.semana || Object.keys(this.db.semana).length === 0) this.gerarSemana();
         this.render();
     },
 
-    salvar() { localStorage.setItem('v41_db', JSON.stringify(this.db)); this.render(); },
+    salvar() { localStorage.setItem('v42_db', JSON.stringify(this.db)); this.render(); },
 
-    // Garante que novos itens entrem no topo e removidos saiam
     sincronizarListas() {
         let basePratos = [];
         Object.values(this.db.config_pratos).forEach(v => v.split('\n').forEach(p => { if(p.trim()) basePratos.push(p.trim()) }));
-        
-        // Receitas novas vão para o INÍCIO
-        basePratos.forEach(p => {
-            if (!this.db.ordem_receitas.includes(p)) this.db.ordem_receitas.unshift(p);
-        });
+        basePratos.forEach(p => { if (!this.db.ordem_receitas.includes(p)) this.db.ordem_receitas.unshift(p); });
         this.db.ordem_receitas = this.db.ordem_receitas.filter(p => basePratos.includes(p));
 
-        // Despensa: extrair ingredientes das receitas
         let baseIng = new Set();
         Object.values(this.db.receitas).forEach(r => r.ing?.forEach(i => { if(i.nome) baseIng.add(i.nome) }));
-        baseIng.forEach(ing => {
-            if (!this.db.ordem_despensa.includes(ing)) this.db.ordem_despensa.unshift(ing);
-        });
+        baseIng.forEach(ing => { if (!this.db.ordem_despensa.includes(ing)) this.db.ordem_despensa.unshift(ing); });
         this.db.ordem_despensa = this.db.ordem_despensa.filter(ing => baseIng.has(ing));
     },
 
     podeFazer(nomePrato, estoqueRef = null) {
         const r = this.db.receitas[nomePrato.trim()];
-        if (!r || !r.ing || r.ing.length === 0) return false; // REGRA ESTRITA: Sem receita/ingredientes = Não sorteia
+        if (!r || !r.ing || r.ing.length === 0) return false;
         const est = estoqueRef || this.db.despensa;
         return r.ing.every(i => (est[i.nome] || 0) >= parseFloat(i.qtd) && (est[i.nome] > 0));
     },
@@ -125,8 +118,6 @@ const app = {
             if (n) novosIng.push({ qtd: q || 0, nome: n });
         });
         this.db.receitas[p] = { ing: novosIng, tarefas: document.getElementById(`tar-${p}`).value };
-        
-        // Move para o FINAL da lista de receitas
         this.db.ordem_receitas = [...this.db.ordem_receitas.filter(x => x !== p), p];
         this.sincronizarListas();
         this.salvar();
@@ -134,7 +125,6 @@ const app = {
 
     atualizarEstoque(ing, valor) {
         this.db.despensa[ing] = parseFloat(valor);
-        // Move para o FINAL da lista da despensa
         this.db.ordem_despensa = [...this.db.ordem_despensa.filter(x => x !== ing), ing];
         this.salvar();
     },
@@ -147,8 +137,28 @@ const app = {
         if (this.abaAtual === 'dia') {
             view.innerHTML = `<h3>🍴 Hoje (${hoje})</h3>
                 <div class="bloco"><h3>☕ Café</h3>${d.cafe} + ${d.bebC}</div>
+                <div class="bloco"><h3>🍎 Lanches</h3>M: ${d.lM} / T: ${d.lT}</div>
                 <div class="bloco"><h3>🍛 Almoço</h3>${d.arr}, ${d.fei}, ${d.pro}, ${d.aco} + ${d.bebA}</div>
                 <div class="bloco"><h3>🌙 Jantar</h3>${d.jan} + ${d.bebJ}</div>`;
+        }
+        else if (this.abaAtual === 'semana') {
+            let h = `<h2>📅 Semana</h2><button class="btn-acao" onclick="app.gerarSemana()">🔄 Sorteio Inteligente</button>
+                <button class="btn-acao" style="background:#444" onclick="window.print()">🖨️ Imprimir</button>
+                <div class="table-wrap"><table><tr><th>Refeição</th>`;
+            const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
+            dias.forEach(n => h += `<th>${n}</th>`);
+            h += `</tr>`;
+            const rows = [
+                {n:"☕ Café",k:"cafe"},{n:"🥤 Beb.C",k:"bebC"},{n:"🍎 Lanche M.",k:"lM"},
+                {n:"🍚 Arroz",k:"arr"},{n:"🍲 Feijão",k:"fei"},{n:"🍖 Prot.",k:"pro"},{n:"🥗 Acomp.",k:"aco"},
+                {n:"🥤 Beb.A",k:"bebA"},{n:"🍎 Lanche T.",k:"lT"},{n:"🌙 Jantar",k:"jan"},{n:"🥤 Beb.J",k:"bebJ"}
+            ];
+            rows.forEach(r => {
+                h += `<tr><td><b>${r.n}</b></td>`;
+                dias.forEach(dia => h += `<td>${this.db.semana[dia]?.[r.k] || '-'} <button class="btn-sorteio-item" onclick="app.reSortear('${dia}','${r.k}')">🎲</button></td>`);
+                h += `</tr>`;
+            });
+            view.innerHTML = h + `</table></div>`;
         }
         else if (this.abaAtual === 'receitas') {
             let h = `<h2>📖 Receitas</h2>`;
@@ -159,10 +169,10 @@ const app = {
                 (r.ing.length ? r.ing : [{qtd:'',nome:''}]).forEach(i => {
                     h += `<div class="linha-ing ing-row-${p.replace(/\s/g, '')}">
                         <input type="number" class="edit-box qtd-f" placeholder="Qtd" value="${i.qtd}">
-                        <input type="text" class="edit-box ing-f" placeholder="Ingrediente" value="${i.nome}">
+                        <input type="text" class="edit-box ing-f" placeholder="Ing" value="${i.nome}">
                     </div>`;
                 });
-                h += `</div><button class="btn-sorteio-item" onclick="app.addIngRow('${p}')">+ Ingrediente</button>
+                h += `</div><button class="btn-sorteio-item" onclick="app.addIngRow('${p}')">+ Ing</button>
                     <textarea id="tar-${p}" class="edit-box" placeholder="Tarefas">${r.tarefas}</textarea></div>`;
             });
             view.innerHTML = h;
@@ -174,33 +184,34 @@ const app = {
                     <input type="number" class="qtd-input" style="width:70px" value="${this.db.despensa[ing] || 0}" 
                     onchange="app.atualizarEstoque('${ing}', this.value)"></div>`;
             });
-            view.innerHTML = h || "<p>Cadastre ingredientes nas receitas primeiro.</p>";
-        }
-        else if (this.abaAtual === 'semana') {
-            let h = `<h2>📅 Semana</h2><button class="btn-acao" onclick="app.gerarSemana()">🔄 Sorteio Inteligente</button>
-                <div class="table-wrap"><table><tr><th>Ref.</th>`;
-            const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
-            dias.forEach(n => h += `<th>${n}</th>`);
-            h += `</tr>`;
-            const rows = [{n:"Café",k:"cafe"},{n:"Arroz",k:"arr"},{n:"Feijão",k:"fei"},{n:"Prot.",k:"pro"},{n:"Jantar",k:"jan"}];
-            rows.forEach(r => {
-                h += `<tr><td><b>${r.n}</b></td>`;
-                dias.forEach(dia => h += `<td>${this.db.semana[dia]?.[r.k] || '-'} <button class="btn-sorteio-item" onclick="app.reSortear('${dia}','${r.k}')">🎲</button></td>`);
-                h += `</tr>`;
-            });
-            view.innerHTML = h + `</table></div>`;
+            view.innerHTML = h || "<p>Cadastre ingredientes nas receitas.</p>";
         }
         else if (this.abaAtual === 'pratos') {
-            let h = `<h2>⚙️ Base</h2>`;
+            let h = `<h2>⚙️ Base de Pratos</h2>`;
             Object.keys(this.db.config_pratos).forEach(k => {
                 h += `<b>${k.toUpperCase()}:</b><textarea class="edit-box" onchange="app.db.config_pratos['${k}']=this.value;app.sincronizarListas();app.salvar()">${this.db.config_pratos[k]}</textarea>`;
             });
             view.innerHTML = h;
         }
+        else if (this.abaAtual === 'tarefas') {
+            let tasks = [];
+            Object.values(d).forEach(prato => {
+                const r = this.db.receitas[prato];
+                if(r?.tarefas) r.tarefas.split('\n').forEach(t => { if(t.trim()) tasks.push(t.trim()) });
+            });
+            let h = `<h2>✅ Tarefas do Dia</h2>`;
+            const dataK = new Date().toLocaleDateString();
+            if (!this.db.checks_tarefas[dataK]) this.db.checks_tarefas[dataK] = [];
+            tasks.forEach(t => {
+                const c = this.db.checks_tarefas[dataK].includes(t);
+                h += `<div class="check-item ${c?'done':''}"><input type="checkbox" ${c?'checked':''} onchange="app.toggleT('${t}', this)"> ${t}</div>`;
+            });
+            view.innerHTML = h || "<p>Nenhuma tarefa pendente.</p>";
+        }
     },
 
     reSortear(dia, k) {
-        const mapa = {cafe:'cafe', arr:'arroz', fei:'feijao', pro:'proteina', jan:'jantares'};
+        const mapa = {cafe:'cafe', bebC:'beb_cafe', lM:'lanches', arr:'arroz', fei:'feijao', pro:'proteina', aco:'acompa', bebA:'beb_almoco', lT:'lanches', jan:'jantares', bebJ:'beb_jantar'};
         this.db.semana[dia][k] = this.sortearItem(mapa[k] || k);
         this.salvar();
     },
@@ -211,6 +222,13 @@ const app = {
         div.className = `linha-ing ing-row-${p.replace(/\s/g, '')}`;
         div.innerHTML = `<input type="number" class="edit-box qtd-f" placeholder="Qtd"><input type="text" class="edit-box ing-f" placeholder="Ingrediente">`;
         container.appendChild(div);
+    },
+
+    toggleT(t, el) {
+        const k = new Date().toLocaleDateString();
+        if(el.checked) this.db.checks_tarefas[k].push(t);
+        else this.db.checks_tarefas[k] = this.db.checks_tarefas[k].filter(x => x !== t);
+        this.salvar();
     },
 
     mudarAba(aba, btn) {
