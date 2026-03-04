@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cardápio Inteligente v46</title>
+    <title>Cardápio Inteligente v47</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
@@ -26,7 +26,6 @@
         .table-wrap { overflow-x: auto; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 1250px; font-size: 10px; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: left; vertical-align: top; }
-        select.edit-box { height: 35px; }
     </style>
 </head>
 <body>
@@ -48,9 +47,18 @@
 <script>
 const app = {
     abaAtual: 'dia',
-    db: JSON.parse(localStorage.getItem('v46_db')) || {
-        config_pratos: { cafe: "Pão com Ovo", beb_cafe: "Café", lanches: "Fruta", arroz: "Arroz Branco", feijao: "Feijão", proteina: "Frango", acompa: "Salada", beb_almoco: "Suco", jantares: "Sopa", beb_jantar: "Água" },
-        receitas: {}, semana: {}, despensa: {}, ordem_receitas: [], ordem_despensa: [], checks_tarefas: {}, conversoes: {}
+    db: JSON.parse(localStorage.getItem('v47_db')) || {
+        config_pratos: { 
+            cafe: "Pão com Ovo", beb_cafe: "Café", lanches: "Bolo\nFruta", 
+            arroz: "Arroz Branco", feijao: "Feijão", proteina: "Frango", 
+            acompa: "Salada", beb_almoco: "Suco", jantares: "Sopa", beb_jantar: "Água" 
+        },
+        receitas: {
+            "Café": { ing: [{qtd: 1, unidade: "xicara", nome: "Pó de Café"}], tarefas: "Passar o café" },
+            "Água": { ing: [{qtd: 1, unidade: "l", nome: "Água"}], tarefas: "Servir gelada" },
+            "Salada": { ing: [{qtd: 1, unidade: "unid", nome: "Alface"}], tarefas: "Lavar e temperar" }
+        }, 
+        semana: {}, despensa: {"Pó de Café": 1, "Água": 20, "Alface": 5}, ordem_receitas: [], ordem_despensa: [], checks_tarefas: {}, conversoes: {"Pó de Café": 100}
     },
 
     init() {
@@ -59,23 +67,22 @@ const app = {
         this.render();
     },
 
-    salvar() { localStorage.setItem('v46_db', JSON.stringify(this.db)); this.render(); },
+    salvar() { localStorage.setItem('v47_db', JSON.stringify(this.db)); this.render(); },
 
     converterParaKg(nomeIng, qtd, unidade) {
-        let gXicara = this.db.conversoes[nomeIng] || 200; 
-        if (unidade === "xicara") return (qtd * gXicara) / 1000;
-        if (unidade === "colher_sopa") return (qtd * (gXicara / 16)) / 1000;
-        if (unidade === "kg" || unidade === "l" || unidade === "unid") return parseFloat(qtd);
+        let gX = this.db.conversoes[nomeIng] || 200; 
+        if (unidade === "xicara") return (qtd * gX) / 1000;
+        if (unidade === "colher_sopa") return (qtd * (gX / 16)) / 1000;
         return parseFloat(qtd);
     },
 
     podeFazer(nomePrato, estoqueRef = null) {
         const r = this.db.receitas[nomePrato.trim()];
-        if (!r || !r.ing || r.ing.length === 0) return false;
+        if (!r || !r.ing) return true; // Se não tem receita definida, permite (como água)
         const est = estoqueRef || this.db.despensa;
         return r.ing.every(i => {
             let n = this.converterParaKg(i.nome, i.qtd, i.unidade);
-            return (est[i.nome] || 0) >= n && (est[i.nome] > 0 || i.unidade === "unid");
+            return (est[i.nome] || 0) >= n;
         });
     },
 
@@ -116,20 +123,21 @@ const app = {
 
         if (this.abaAtual === 'dia') {
             view.innerHTML = `<h3>🍴 Hoje (${hoje})</h3>
-                <div class="bloco"><h3>☕ Café</h3>${d.cafe} + ${d.bebC}</div>
+                <div class="bloco"><h3>☕ Café</h3>${d.cafe} + <b>${d.bebC}</b></div>
                 <div class="bloco"><h3>🍎 Lanches</h3>M: ${d.lM} / T: ${d.lT}</div>
-                <div class="bloco"><h3>🍛 Almoço</h3>${d.arr}, ${d.fei}, ${d.pro}, ${d.aco} + ${d.bebA}</div>
-                <div class="bloco"><h3>🌙 Jantar</h3>${d.jan} + ${d.bebJ}</div>`;
+                <div class="bloco"><h3>🍛 Almoço</h3>${d.arr}, ${d.fei}, ${d.pro}, <b>${d.aco}</b> + <b>${d.bebA}</b></div>
+                <div class="bloco"><h3>🌙 Jantar</h3>${d.jan} + <b>${d.bebJ}</b></div>`;
         }
         else if (this.abaAtual === 'semana') {
-            let h = `<h2>📅 Semana</h2><button class="btn-acao" onclick="app.gerarSemana()">🔄 Sorteio Inteligente</button>
+            let h = `<h2>📅 Semana</h2><button class="btn-acao" onclick="app.gerarSemana()">🔄 Novo Sorteio</button>
                 <div class="table-wrap"><table><tr><th>Refeição</th>`;
             const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
             dias.forEach(n => h += `<th>${n}</th>`);
             h += `</tr>`;
             const rows = [
-                {n:"Café",k:"cafe"},{n:"Arroz",k:"arr"},{n:"Feijão",k:"fei"},{n:"Proteína",k:"pro"},
-                {n:"Acomp.",k:"aco"},{n:"Beb. Alm.",k:"bebA"},{n:"Lanche T.",k:"lT"},{n:"Jantar",k:"jan"}
+                {n:"Café",k:"cafe"},{n:"Beb. Café",k:"bebC"},{n:"Lanche M.",k:"lM"},
+                {n:"Arroz",k:"arr"},{n:"Feijão",k:"fei"},{n:"Prot.",k:"pro"},{n:"Acomp.",k:"aco"},
+                {n:"Beb. Alm.",k:"bebA"},{n:"Lanche T.",k:"lT"},{n:"Jantar",k:"jan"},{n:"Beb. Jan.",k:"bebJ"}
             ];
             rows.forEach(r => {
                 h += `<tr><td><b>${r.n}</b></td>`;
@@ -168,7 +176,7 @@ const app = {
             let h = `<h2>📦 Despensa (Kg/L/Un)</h2>`;
             this.db.ordem_despensa.forEach(ing => {
                 h += `<div class="check-item" style="justify-content:space-between"><span>${ing}</span>
-                    <input type="number" step="0.01" class="qtd-input" style="width:80px" value="${this.db.despensa[ing] || 0}" onchange="app.atualizarEstoque('${ing}',this.value)"></div>`;
+                    <input type="number" step="0.01" class="qtd-input" style="width:80px" value="${this.db.despensa[ing] || 0}" onchange="app.db.despensa['${ing}']=parseFloat(this.value);app.salvar()"></div>`;
             });
             view.innerHTML = h;
         }
@@ -209,12 +217,6 @@ const app = {
         this.db.receitas[p] = { ing: nIng, tarefas: document.getElementById(`tar-${p}`).value };
         this.db.ordem_receitas = [...this.db.ordem_receitas.filter(x => x !== p), p];
         this.sincronizarListas();
-        this.salvar();
-    },
-
-    atualizarEstoque(i, v) {
-        this.db.despensa[i] = parseFloat(v);
-        this.db.ordem_despensa = [...this.db.ordem_despensa.filter(x => x !== i), i];
         this.salvar();
     },
 
