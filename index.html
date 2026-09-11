@@ -3,24 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cardápio Inteligente v48</title>
+    <title>Cardápio Inteligente v49</title>
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #1a1a1a; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
         .container { max-width: 1200px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; min-height: 95vh; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .nav-tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 15px; background: #eee; padding: 8px; border-radius: 12px; scrollbar-width: none; }
-        .tab { padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; background: #ddd; font-size: 11px; white-space: nowrap; flex-shrink: 0; }
+        .tab { padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; background: #ddd; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
         .tab.active { background: var(--primary); color: white; }
         .bloco { border-left: 5px solid var(--primary); background: #f8f9fa; padding: 12px; margin-bottom: 10px; border-radius: 8px; }
-        h3 { margin: 0 0 5px 0; font-size: 10px; color: #666; text-transform: uppercase; }
+        h3 { margin: 0 0 5px 0; font-size: 11px; color: #666; text-transform: uppercase; }
         .btn-acao { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin: 5px 0; }
-        .btn-save-mini { background: #444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 10px; float: right; cursor: pointer; }
-        .btn-sorteio-item { background: #fff; border: 1px solid var(--primary); color: var(--primary); padding: 2px 4px; border-radius: 4px; font-size: 9px; cursor: pointer; margin-left: 3px; }
-        .edit-box { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 8px; margin: 5px 0; box-sizing: border-box; font-family: inherit; }
-        .check-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid #eee; }
-        .done { text-decoration: line-through; opacity: 0.5; }
+        .btn-sorteio-item { background: #fff; border: 1px solid var(--primary); color: var(--primary); padding: 2px 5px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-left: 3px; }
+        .edit-box { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 8px; margin: 5px 0; box-sizing: border-box; font-family: inherit; min-height: 70px; }
         .table-wrap { overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; font-size: 11px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
     </style>
 </head>
@@ -29,10 +26,8 @@
     <div id="main-app">
         <div class="nav-tabs">
             <button class="tab active" onclick="app.mudarAba('dia', this)">Hoje</button>
-            <button class="tab" onclick="app.mudarAba('tarefas', this)">Tarefas</button>
             <button class="tab" onclick="app.mudarAba('semana', this)">Semana</button>
-            <button class="tab" onclick="app.mudarAba('receitas', this)">Receitas</button>
-            <button class="tab" onclick="app.mudarAba('pratos', this)">Base</button>
+            <button class="tab" onclick="app.mudarAba('pratos', this)">Base de Pratos</button>
         </div>
         <div id="app-view"></div>
     </div>
@@ -41,32 +36,34 @@
 <script>
 const app = {
     abaAtual: 'dia',
-    db: JSON.parse(localStorage.getItem('v48_db')) || {
+    db: JSON.parse(localStorage.getItem('v49_db')) || {
         config_pratos: { 
-            cafe: "Pão com Ovo", beb_cafe: "Café", lanches: "Fruta", 
-            arroz: "Arroz Branco", feijao: "Feijão", proteina: "Frango", 
-            acompa: "Salada", beb_almoco: "Suco", jantares: "Sopa", beb_jantar: "Água" 
+            cafe: "Pão na chapa\nPão com ovo\nTapioca\nMingau de aveia\nCuscuz com ovo",
+            beb_cafe: "Café com leite\nCafé preto\nChá\nSuco de laranja",
+            lanches: "Fruta\nIogurte\nBiscoito\nBarra de cereal",
+            arroz: "Arroz branco\nArroz integral\nArroz à grega",
+            feijao: "Feijão carioca\nFeijão preto\nLentilha",
+            proteina: "Frango grelhado\nCarne moída\nBife acebolado\nOmelete\nPeixe assado",
+            acompa: "Salada verde\nPurê de batata\nLegumes no vapor\nFarofa",
+            beb_almoco: "Suco de limão\nSuco de maracujá\nÁgua aromatizada\nRefrigerante",
+            jantares: "Sopa de legumes\nOmelete recheado\nSanduíche natural\nCaldo verde\nJantar leve",
+            beb_jantar: "Água\nChá de camomila\nSuco natural"
         },
-        receitas: {}, semana: {}, ordem_receitas: [], checks_tarefas: {}
+        semana: {}
     },
 
     init() {
-        this.sincronizarListas();
         if (!this.db.semana || Object.keys(this.db.semana).length === 0) this.gerarSemana();
         this.render();
     },
 
-    salvar() { localStorage.setItem('v48_db', JSON.stringify(this.db)); this.render(); },
-
-    sincronizarListas() {
-        let basePratos = [];
-        Object.values(this.db.config_pratos).forEach(v => v.split('\n').forEach(p => { if(p.trim()) basePratos.push(p.trim()) }));
-        basePratos.forEach(p => { if (!this.db.ordem_receitas.includes(p)) this.db.ordem_receitas.unshift(p); });
-        this.db.ordem_receitas = this.db.ordem_receitas.filter(p => basePratos.includes(p));
+    salvar() { 
+        localStorage.setItem('v49_db', JSON.stringify(this.db)); 
+        this.render(); 
     },
 
     sortearItem(campo) {
-        const lista = (this.db.config_pratos[campo] || "").split('\n').filter(x => x.trim());
+        const lista = (this.db.config_pratos[campo] || "").split('\n').map(x => x.trim()).filter(x => x !== "");
         if (lista.length > 0) return lista[Math.floor(Math.random() * lista.length)];
         return "-";
     },
@@ -74,11 +71,16 @@ const app = {
     gerarSemana() {
         ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"].forEach(d => {
             this.db.semana[d] = {
-                cafe: this.sortearItem('cafe'), bebC: this.sortearItem('beb_cafe'),
-                lM: this.sortearItem('lanches'), arr: this.sortearItem('arroz'), 
-                fei: this.sortearItem('feijao'), pro: this.sortearItem('proteina'), 
-                aco: this.sortearItem('acompa'), bebA: this.sortearItem('beb_almoco'),
-                lT: this.sortearItem('lanches'), jan: this.sortearItem('jantares'), 
+                cafe: this.sortearItem('cafe'), 
+                bebC: this.sortearItem('beb_cafe'),
+                lM: this.sortearItem('lanches'), 
+                arr: this.sortearItem('arroz'), 
+                fei: this.sortearItem('feijao'), 
+                pro: this.sortearItem('proteina'), 
+                aco: this.sortearItem('acompa'), 
+                bebA: this.sortearItem('beb_almoco'),
+                lT: this.sortearItem('lanches'), 
+                jan: this.sortearItem('jantares'), 
                 bebJ: this.sortearItem('beb_jantar')
             };
         });
@@ -86,7 +88,11 @@ const app = {
     },
 
     reSortear(dia, k) {
-        const mapa = {cafe:'cafe', bebC:'beb_cafe', lM:'lanches', arr:'arroz', fei:'feijao', pro:'proteina', aco:'acompa', bebA:'beb_almoco', lT:'lanches', jan:'jantares', bebJ:'beb_jantar'};
+        const mapa = {
+            cafe: 'cafe', bebC: 'beb_cafe', lM: 'lanches', 
+            arr: 'arroz', fei: 'feijao', pro: 'proteina', aco: 'acompa', 
+            bebA: 'beb_almoco', lT: 'lanches', jan: 'jantares', bebJ: 'beb_jantar'
+        };
         this.db.semana[dia][k] = this.sortearItem(mapa[k] || k);
         this.salvar();
     },
@@ -97,83 +103,59 @@ const app = {
         const d = this.db.semana[hoje] || {};
 
         if (this.abaAtual === 'dia') {
-            view.innerHTML = `<h3>🍴 Hoje (${hoje})</h3>
-                <div class="bloco"><h3>☕ Café</h3>${d.cafe} + ${d.bebC}</div>
-                <div class="bloco"><h3>🍎 Lanches</h3>M: ${d.lM} / T: ${d.lT}</div>
-                <div class="bloco"><h3>🍛 Almoço</h3>${d.arr}, ${d.fei}, ${d.pro}, ${d.aco} + ${d.bebA}</div>
-                <div class="bloco"><h3>🌙 Jantar</h3>${d.jan} + ${d.bebJ}</div>`;
+            view.innerHTML = `
+                <h3>🍴 Sugestão para Hoje (${hoje})</h3>
+                <div class="bloco"><h3>☕ Café da Manhã</h3>${d.cafe || '-'} | <b>Bebida:</b> ${d.bebC || '-'}</div>
+                <div class="bloco"><h3>🍎 Lanche da Manhã</h3>${d.lM || '-'}</div>
+                <div class="bloco"><h3>🍛 Almoço</h3>${d.arr || '-'}, ${d.fei || '-'}, ${d.pro || '-'}, ${d.aco || '-'} | <b>Bebida:</b> ${d.bebA || '-'}</div>
+                <div class="bloco"><h3>🍏 Lanche da Tarde</h3>${d.lT || '-'}</div>
+                <div class="bloco"><h3>🌙 Jantar</h3>${d.jan || '-'} | <b>Bebida:</b> ${d.bebJ || '-'}</div>
+                <button class="btn-acao" onclick="app.gerarSemana()">🔄 Sorteia Novamente Todos os Dias</button>
+            `;
         }
         else if (this.abaAtual === 'semana') {
-            let h = `<h2>📅 Semana</h2><button class="btn-acao" onclick="app.gerarSemana()">🔄 Sortear Tudo</button>
+            let h = `<h2>📅 Cardápio Semanal</h2>
+                <button class="btn-acao" onclick="app.gerarSemana()">🔄 Sortear Semana Completa</button>
                 <div class="table-wrap"><table><tr><th>Refeição</th>`;
             const dias = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO","DOMINGO"];
             dias.forEach(n => h += `<th>${n}</th>`);
             h += `</tr>`;
+            
             const rows = [
-                {n:"Café",k:"cafe"},{n:"Beb. Café",k:"bebC"},{n:"Lanche M.",k:"lM"},
-                {n:"Arroz",k:"arr"},{n:"Feijão",k:"fei"},{n:"Prot.",k:"pro"},{n:"Acomp.",k:"aco"},
-                {n:"Beb. Alm.",k:"bebA"},{n:"Lanche T.",k:"lT"},{n:"Jantar",k:"jan"},{n:"Beb. Jan.",k:"bebJ"}
+                {n: "Café", k: "cafe"}, {n: "Bebida Café", k: "bebC"},
+                {n: "Lanche M.", k: "lM"},
+                {n: "Arroz", k: "arr"}, {n: "Feijão", k: "fei"}, {n: "Proteína", k: "pro"}, {n: "Acomp.", k: "aco"}, {n: "Bebida Almoço", k: "bebA"},
+                {n: "Lanche T.", k: "lT"},
+                {n: "Jantar", k: "jan"}, {n: "Bebida Jantar", k: "bebJ"}
             ];
+
             rows.forEach(r => {
                 h += `<tr><td><b>${r.n}</b></td>`;
-                dias.forEach(dia => h += `<td>${this.db.semana[dia]?.[r.k] || '-'} <button class="btn-sorteio-item" onclick="app.reSortear('${dia}','${r.k}')">🎲</button></td>`);
+                dias.forEach(dia => {
+                    h += `<td>${this.db.semana[dia]?.[r.k] || '-'} <button class="btn-sorteio-item" onclick="app.reSortear('${dia}','${r.k}')">🎲</button></td>`;
+                });
                 h += `</tr>`;
             });
             view.innerHTML = h + `</table></div>`;
         }
-        else if (this.abaAtual === 'receitas') {
-            let h = `<h2>📖 Receitas e Tarefas</h2>`;
-            this.db.ordem_receitas.forEach(p => {
-                const r = this.db.receitas[p] || { ing: "", tarefas: "" };
+        else if (this.abaAtual === 'pratos') {
+            let h = `<h2>⚙️ Base de Pratos e Bebidas</h2><p style="font-size: 11px; color: #555;">Adicione ou remova nomes (um por linha) para alimentar os sorteios.</p>`;
+            
+            const titulos = {
+                cafe: "Café da Manhã", beb_cafe: "Bebidas do Café",
+                lanches: "Lanches",
+                arroz: "Tipos de Arroz", feijao: "Tipos de Feijão", proteina: "Proteínas", acompanha: "Acompanhamentos", beb_almoco: "Bebidas do Almoço",
+                jantares: "Opções de Jantar", beb_jantar: "Bebidas do Jantar"
+            };
+
+            Object.keys(this.db.config_pratos).forEach(k => {
                 h += `<div class="bloco">
-                    <button class="btn-save-mini" onclick="app.saveR('${p}')">SALVAR</button>
-                    <b>${p}</b>
-                    <textarea id="ing-${p}" class="edit-box" placeholder="Ingredientes">${r.ing || ''}</textarea>
-                    <textarea id="tar-${p}" class="edit-box" placeholder="Tarefas (uma por linha)">${r.tarefas || ''}</textarea>
+                    <b>${titulos[k] || k.toUpperCase()}:</b>
+                    <textarea class="edit-box" onchange="app.db.config_pratos['${k}']=this.value;app.salvar()">${this.db.config_pratos[k]}</textarea>
                 </div>`;
             });
             view.innerHTML = h;
         }
-        else if (this.abaAtual === 'tarefas') {
-            let tasks = [];
-            Object.values(d).forEach(p => {
-                const r = this.db.receitas[p.toString().trim()];
-                if(r?.tarefas) r.tarefas.split('\n').forEach(t => { if(t.trim()) tasks.push(t.trim()) });
-            });
-            let h = `<h2>✅ Tarefas de Hoje</h2>`;
-            const dataK = new Date().toLocaleDateString();
-            if (!this.db.checks_tarefas[dataK]) this.db.checks_tarefas[dataK] = [];
-            if(tasks.length === 0) h += `<p>Nenhuma tarefa pendente para o cardápio de hoje.</p>`;
-            tasks.forEach(t => {
-                const c = this.db.checks_tarefas[dataK].includes(t);
-                h += `<div class="check-item ${c?'done':''}"><input type="checkbox" ${c?'checked':''} onchange="app.toggleT('${t}', this)"> ${t}</div>`;
-            });
-            view.innerHTML = h;
-        }
-        else if (this.abaAtual === 'pratos') {
-            let h = `<h2>⚙️ Base de Itens</h2>`;
-            Object.keys(this.db.config_pratos).forEach(k => {
-                h += `<b>${k.toUpperCase()}:</b><textarea class="edit-box" onchange="app.db.config_pratos['${k}']=this.value;app.sincronizarListas();app.salvar()">${this.db.config_pratos[k]}</textarea>`;
-            });
-            view.innerHTML = h;
-        }
-    },
-
-    saveR(p) {
-        this.db.receitas[p] = {
-            ing: document.getElementById(`ing-${p}`).value,
-            tarefas: document.getElementById(`tar-${p}`).value
-        };
-        // Move para o final da lista conforme regra anterior
-        this.db.ordem_receitas = [...this.db.ordem_receitas.filter(x => x !== p), p];
-        this.salvar();
-    },
-
-    toggleT(t, el) {
-        const k = new Date().toLocaleDateString();
-        if(el.checked) this.db.checks_tarefas[k].push(t);
-        else this.db.checks_tarefas[k] = this.db.checks_tarefas[k].filter(x => x !== t);
-        this.salvar();
     },
 
     mudarAba(aba, btn) {
